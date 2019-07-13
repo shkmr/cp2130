@@ -97,7 +97,7 @@ int usbcom_re_enumerate(usbcom_t com)
   return 0;
 }
 
-int usbcom_control_msg(usbcom_t com, int type, int req, int val, int index, char *buf, int size)
+int usbcom_control_msg(usbcom_t com, int type, int req, int val, int index, void *buf, int size)
 {
   int r;
   r = usb_control_msg(com->dev, type, req, val, index, buf, size, timeout);
