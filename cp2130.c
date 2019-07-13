@@ -13,6 +13,10 @@
 #include <err.h>
 #include "usbcom.h"
 
+/*
+ *       API
+ */
+
 int cp2130_get_clock_divider(usbcom_t com)
 {
   unsigned char buf[1];
@@ -28,6 +32,93 @@ void cp2130_get_event_counter(usbcom_t com, int *mode, int *count)
   *count = (buf[1]<<8)+buf[2];
 }
 
+int cp2130_get_full_threshold(usbcom_t com)
+{
+  unsigned char buf[1];
+  usbcom_control_msg(com, 0xC0, 0x34, 0, 0, buf, 1);
+  return buf[0];
+}
+
+void cp2130_get_gpio_chip_select(usbcom_t com, int *ch, int *pin)
+{
+  unsigned char buf[4];
+  usbcom_control_msg(com, 0xC0, 0x24, 0, 0, buf, 4);
+  *ch  = (buf[0]<<8)+buf[1];
+  *pin = (buf[2]<<8)+buf[3];
+}
+
+void cp2130_get_gpio_mode_and_level(usbcom_t com, int *mode, int *level)
+{
+  unsigned char buf[4];
+  usbcom_control_msg(com, 0xC0, 0x22, 0, 0, buf, 4);
+  *mode  = (buf[0]<<8)+buf[1];
+  *level = (buf[2]<<8)+buf[3];
+}
+
+int cp2130_get_gpio_values(usbcom_t com)
+{
+  int r;
+  unsigned char buf[2];
+  usbcom_control_msg(com, 0xC0, 0x20, 0, 0, buf, 2);
+  r = (buf[0]<<8)+buf[1];
+  return r;
+}
+
+int cp2130_get_rtr_state(usbcom_t com)
+{
+  unsigned char buf[1];
+  usbcom_control_msg(com, 0xC0, 0x36, 0, 0, buf, 1);
+  return buf[0];
+}
+
+void cp2130_get_spi_word(usbcom_t com, unsigned char *buf)
+{
+  usbcom_control_msg(com, 0xC0, 0x30, 0, 0, buf, 11);
+}
+
+void cp2130_get_spi_delay(usbcom_t com, int ch,
+                          int *mask,
+                          int *inter_byte_delay,
+                          int *post_assert_delay,
+                          int *pre_deassert_delay)
+
+{
+  unsigned char buf[8];
+  usbcom_control_msg(com, 0xC0, 0x32, ch, 0, buf, 8);
+  if (ch != buf[0])
+    warnx("cp2130_get_spi_delay ch conflict given %d, but get %d", ch, buf[0]);
+  *mask  = buf[1];
+  *inter_byte_delay   = (buf[2]<<8)+buf[3];
+  *post_assert_delay  = (buf[4]<<8)+buf[5];
+  *pre_deassert_delay = (buf[6]<<8)+buf[7];
+}
+
+void cp2130_get_readonly_version(usbcom_t com, int *major, int *minor)
+{
+  unsigned char buf[2];
+  usbcom_control_msg(com, 0xC0, 0x11, 0, 0, buf, 2);
+  *major = buf[0];
+  *minor = buf[1];
+}
+
+void cp2130_reset_device(usbcom_t com)
+{
+  usbcom_control_msg(com, 0xC0, 0x10, 0, 0, NULL, 0);
+}
+
+void cp2130_set_gpio_values(usbcom_t com, int level, int mask)
+{
+  char buf[4];
+  buf[0] = ((level>>8)&0x00ff);
+  buf[1] = ((level>>0)&0x00ff);
+  buf[2] = ((mask>>8)&0x00ff);
+  buf[3] = ((mask>>0)&0x00ff);
+  usbcom_control_msg(com, 0x40, 0x21, 0, 0, buf, 4);
+}
+
+/*
+ *       Convenience
+ */
 int cp2130_get_event_counter_count(usbcom_t com)
 {
   int mode, count;
@@ -40,26 +131,6 @@ int cp2130_get_event_counter_mode(usbcom_t com)
   int mode, count;
   cp2130_get_event_counter(com, &mode, &count);
   return mode;
-}
-
-int cp2130_get_gpio_values(usbcom_t com)
-{
-  int r;
-  unsigned char buf[2];
-  usbcom_control_msg(com, 0xC0, 0x20, 0, 0, buf, 2);
-  r = (buf[0]<<8)+buf[1];
-  return r;
-}
-
-
-void cp2130_set_gpio_values(usbcom_t com, int level, int mask)
-{
-  char buf[4];
-  buf[0] = ((level>>8)&0x00ff);
-  buf[1] = ((level>>0)&0x00ff);
-  buf[2] = ((mask>>8)&0x00ff);
-  buf[3] = ((mask>>0)&0x00ff);
-  usbcom_control_msg(com, 0x40, 0x21, 0, 0, buf, 4);
 }
 
 enum {
@@ -117,6 +188,7 @@ void cp2130_reset_gpio10(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPI
 int main(int c, char *v[])
 {
   int vendor, product, n;
+  int major, minor;
   usbcom_t com;
 
   printf("cp2130 main\n");
@@ -128,7 +200,8 @@ int main(int c, char *v[])
   if (com == NULL)
     err(1, "cp2130: open failed");
 
-  printf("connected\n");
+  cp2130_get_readonly_version(com, &major, &minor);
+  printf("connected version %d.%d\n", major, minor);
 
   for (n=0; n < 10; n++) {
     printf("LED ON:  Event Counter=%4d\n", cp2130_get_event_counter_count(com));
