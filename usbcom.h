@@ -5,6 +5,9 @@
 
 typedef struct usbcom *usbcom_t;
 
+void usbcom_set_debug_level(int x);
+void usbcom_set_timeout(int x);
+
 /* 
  * usbcom_open :  Open USB device for communication
  * returns NULL if error.
@@ -33,6 +36,13 @@ int usbcom_npipe(usbcom_t com);
  */
 
 int usbcom_re_enumerate(usbcom_t com);
+
+/*
+ * usbcom_control_msg : control_transfer
+ *
+ */
+int usbcom_control_msg(usbcom_t com, int type, int req, int val, int index, void *buf, int size);
+
 
 /* 
  * usbcom_send : send 
