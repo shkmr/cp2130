@@ -22,7 +22,7 @@ all : test_cp2130
 check_cp2130 : test_cp2130
 	./test_cp2130
 
-test_cp2130 : cp2130.c
+test_cp2130 : cp2130.c $(USBCOM)
 	cc -o test_cp2130 -DCP2130_MAIN cp2130.c $(USBCOM) $(LIBS)
 
 cp2130.o : cp2130.c
@@ -44,4 +44,4 @@ usbcom_libusb01.o : usbcom_libusb01.c usbcom.h
 usbcom_libusb10.o : usbcom_libusb10.c usbcom.h
 
 clean:
-	-rm -f libusbcom.a *.o *~ fo_libusb01 listdevs
+	-rm -f libusbcom.a *.o *~ fo_libusb01 listdevs test_cp2130
