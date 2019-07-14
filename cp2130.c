@@ -15,6 +15,30 @@
 #include "usbcom.h"
 #include "cp2130.h"
 
+struct cp2130 {
+  usbcom_t com;
+  unsigned char wrbuf[CP2130_WRBUFSIZ];
+  int memory_key;
+};
+
+
+cp2130_t cp2130_open(int vendor_id, int product_id)
+{
+  cp2130_t dev;
+
+  if ((dev = (cp2130_t)malloc(sizeof(struct cp2130)))  == NULL) err(1, NULL);
+  if ((dev->com = usbcom_open(vendor_id, product_id)) == NULL)  err(1, "cp2130: usb device open failed");
+  dev->memory_key = 0;
+
+  return dev;
+}
+
+void cp2130_close(cp2130_t dev)
+{
+  usbcom_close(dev->com);
+  free(dev);
+}
+
 /*
  *      API :
  *
@@ -25,66 +49,66 @@
 /*
  *       RequestType = 0xc0,   Device-to-Host, Vendor, Device
  */
-int cp2130_get_clock_divider(usbcom_t com)
+int cp2130_get_clock_divider(cp2130_t dev)
 {
   unsigned char buf[1];
-  usbcom_control_msg(com, 0xc0, 0x46, 0, 0, buf, 1);
+  usbcom_control_msg(dev->com, 0xc0, 0x46, 0, 0, buf, 1);
   return (int)buf[0];
 }
 
-void cp2130_get_event_counter(usbcom_t com, int *mode, int *count)
+void cp2130_get_event_counter(cp2130_t dev, int *mode, int *count)
 {
   unsigned char buf[3];
-  usbcom_control_msg(com, 0xc0, 0x44, 0, 0, buf, 3);
+  usbcom_control_msg(dev->com, 0xc0, 0x44, 0, 0, buf, 3);
   *mode = buf[0];
   *count = (buf[1]<<8)+buf[2];
 }
 
-int cp2130_get_full_threshold(usbcom_t com)
+int cp2130_get_full_threshold(cp2130_t dev)
 {
   unsigned char buf[1];
-  usbcom_control_msg(com, 0xc0, 0x34, 0, 0, buf, 1);
+  usbcom_control_msg(dev->com, 0xc0, 0x34, 0, 0, buf, 1);
   return buf[0];
 }
 
-void cp2130_get_gpio_chip_select(usbcom_t com, int *ch, int *pin)
+void cp2130_get_gpio_chip_select(cp2130_t dev, int *ch, int *pin)
 {
   unsigned char buf[4];
-  usbcom_control_msg(com, 0xc0, 0x24, 0, 0, buf, 4);
+  usbcom_control_msg(dev->com, 0xc0, 0x24, 0, 0, buf, 4);
   *ch  = (buf[0]<<8)+buf[1];
   *pin = (buf[2]<<8)+buf[3];
 }
 
-void cp2130_get_gpio_mode_and_level(usbcom_t com, int *mode, int *level)
+void cp2130_get_gpio_mode_and_level(cp2130_t dev, int *mode, int *level)
 {
   unsigned char buf[4];
-  usbcom_control_msg(com, 0xc0, 0x22, 0, 0, buf, 4);
+  usbcom_control_msg(dev->com, 0xc0, 0x22, 0, 0, buf, 4);
   *mode  = (buf[0]<<8)+buf[1];
   *level = (buf[2]<<8)+buf[3];
 }
 
-int cp2130_get_gpio_values(usbcom_t com)
+int cp2130_get_gpio_values(cp2130_t dev)
 {
   int r;
   unsigned char buf[2];
-  usbcom_control_msg(com, 0xc0, 0x20, 0, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0xc0, 0x20, 0, 0, buf, 2);
   r = (buf[0]<<8)+buf[1];
   return r;
 }
 
-int cp2130_get_rtr_state(usbcom_t com)
+int cp2130_get_rtr_state(cp2130_t dev)
 {
   unsigned char buf[1];
-  usbcom_control_msg(com, 0xc0, 0x36, 0, 0, buf, 1);
+  usbcom_control_msg(dev->com, 0xc0, 0x36, 0, 0, buf, 1);
   return buf[0];
 }
 
-void cp2130_get_spi_word(usbcom_t com, unsigned char *buf)
+void cp2130_get_spi_word(cp2130_t dev, unsigned char *buf)
 {
-  usbcom_control_msg(com, 0xc0, 0x30, 0, 0, buf, 11);
+  usbcom_control_msg(dev->com, 0xc0, 0x30, 0, 0, buf, 11);
 }
 
-void cp2130_get_spi_delay(usbcom_t com, int channel,
+void cp2130_get_spi_delay(cp2130_t dev, int channel,
                           int *mask,
                           int *inter_byte_delay,
                           int *post_assert_delay,
@@ -92,7 +116,7 @@ void cp2130_get_spi_delay(usbcom_t com, int channel,
 
 {
   unsigned char buf[8];
-  usbcom_control_msg(com, 0xc0, 0x32, 0, channel, buf, 8);
+  usbcom_control_msg(dev->com, 0xc0, 0x32, 0, channel, buf, 8);
   if (channel != buf[0])
     warnx("cp2130_get_spi_delay ch conflict given %d, but get %d", channel, buf[0]);
   *mask  = buf[1];
@@ -101,10 +125,10 @@ void cp2130_get_spi_delay(usbcom_t com, int channel,
   *pre_deassert_delay = (buf[6]<<8)+buf[7];
 }
 
-void cp2130_get_readonly_version(usbcom_t com, int *major, int *minor)
+void cp2130_get_readonly_version(cp2130_t dev, int *major, int *minor)
 {
   unsigned char buf[2];
-  usbcom_control_msg(com, 0xc0, 0x11, 0, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0xc0, 0x11, 0, 0, buf, 2);
   *major = buf[0];
   *minor = buf[1];
 }
@@ -113,77 +137,77 @@ void cp2130_get_readonly_version(usbcom_t com, int *major, int *minor)
  *       RequestType = 0x40,   Host-to-Device, Vendor, Device
  */
 
-void cp2130_reset_device(usbcom_t com)
+void cp2130_reset_device(cp2130_t dev)
 {
-  usbcom_control_msg(com, 0x40, 0x10, 0, 0, NULL, 0);
+  usbcom_control_msg(dev->com, 0x40, 0x10, 0, 0, NULL, 0);
 }
 
-void cp2130_set_clock_divider(usbcom_t com, int divider)
+void cp2130_set_clock_divider(cp2130_t dev, int divider)
 {
   unsigned char buf[1];
   buf[0] = divider;
-  usbcom_control_msg(com, 0x40, 0x47, 0, 0, buf, 1);
+  usbcom_control_msg(dev->com, 0x40, 0x47, 0, 0, buf, 1);
 }
 
-void cp2130_set_event_counter(usbcom_t com, int mode, int count)
+void cp2130_set_event_counter(cp2130_t dev, int mode, int count)
 {
   unsigned char buf[3];
   buf[0] = mode;
   buf[1] = ((count>>8)&0x00ff);
   buf[2] = ((count>>0)&0x00ff);
-  usbcom_control_msg(com, 0x40, 0x45, 0, 0, buf, 3);
+  usbcom_control_msg(dev->com, 0x40, 0x45, 0, 0, buf, 3);
 }
 
-void cp2130_set_full_threshold(usbcom_t com, int threshold)
+void cp2130_set_full_threshold(cp2130_t dev, int threshold)
 {
   unsigned char buf[1];
   buf[0] = threshold;
-  usbcom_control_msg(com, 0x40, 0x35, 0, 0, buf, 1);
+  usbcom_control_msg(dev->com, 0x40, 0x35, 0, 0, buf, 1);
 }
 
-void cp2130_set_gpio_chip_select(usbcom_t com, int channel, int control)
+void cp2130_set_gpio_chip_select(cp2130_t dev, int channel, int control)
 {
   unsigned char buf[2];
   buf[0] = channel;
   buf[1] = control;
-  usbcom_control_msg(com, 0x40, 0x25, 0, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0x40, 0x25, 0, 0, buf, 2);
 }
 
-void cp2130_set_gpio_mode_and_level(usbcom_t com, int index, int mode, int level)
+void cp2130_set_gpio_mode_and_level(cp2130_t dev, int index, int mode, int level)
 {
   unsigned char buf[3];
   buf[0] = index;
   buf[1] = mode;
   buf[2] = level;
-  usbcom_control_msg(com, 0x40, 0x23, 0, 0, buf, 3);
+  usbcom_control_msg(dev->com, 0x40, 0x23, 0, 0, buf, 3);
 }
 
-void cp2130_set_gpio_values(usbcom_t com, int level, int mask)
+void cp2130_set_gpio_values(cp2130_t dev, int level, int mask)
 {
   unsigned char buf[4];
   buf[0] = ((level>>8)&0x00ff);
   buf[1] = ((level>>0)&0x00ff);
   buf[2] = ((mask>>8)&0x00ff);
   buf[3] = ((mask>>0)&0x00ff);
-  usbcom_control_msg(com, 0x40, 0x21, 0, 0, buf, 4);
+  usbcom_control_msg(dev->com, 0x40, 0x21, 0, 0, buf, 4);
 }
 
-void cp2130_set_rtr_stop(usbcom_t com, int val)
+void cp2130_set_rtr_stop(cp2130_t dev, int val)
 {
   unsigned char buf[1];
   buf[0] = val;
-  usbcom_control_msg(com, 0x40, 0x37, 0, 0, buf, 1);
+  usbcom_control_msg(dev->com, 0x40, 0x37, 0, 0, buf, 1);
 }
 
-void cp2130_set_spi_word(usbcom_t com, int channel, int word)
+void cp2130_set_spi_word(cp2130_t dev, int channel, int word)
 {
   unsigned char buf[2];
   buf[0] = channel;
   buf[1] = word;
-  usbcom_control_msg(com, 0x40, 0x31, 0, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0x40, 0x31, 0, 0, buf, 2);
 }
 
-void cp2130_set_spi_delay(usbcom_t com, int channel,
+void cp2130_set_spi_delay(cp2130_t dev, int channel,
                           int mask,
                           int inter_byte_delay,
                           int post_assert_delay,
@@ -199,21 +223,21 @@ void cp2130_set_spi_delay(usbcom_t com, int channel,
   buf[5] = ((post_assert_delay>>0)&0x00ff);
   buf[6] = ((pre_deassert_delay>>8)&0x00ff);
   buf[7] = ((pre_deassert_delay>>0)&0x00ff);
-  usbcom_control_msg(com, 0x40, 0x33, 0, 0, buf, 8);
+  usbcom_control_msg(dev->com, 0x40, 0x33, 0, 0, buf, 8);
 }
 
 /*
  *       OTP ROM Configuration Commands Part 0xc0,  Devicet-to-Host
  */
 
-int cp2130otp_get_lock_byte(usbcom_t com)
+int cp2130otp_get_lock_byte(cp2130_t dev)
 {
   unsigned char buf[2];
-  usbcom_control_msg(com, 0xc0, 0x6e, 0, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0xc0, 0x6e, 0, 0, buf, 2);
   return (buf[0]<<8)+buf[1];
 }
 
-void cp2130otp_get_manufacturing_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+void cp2130otp_get_manufacturing_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
 {
   unsigned char buf[64];
   int len;
@@ -225,24 +249,24 @@ void cp2130otp_get_manufacturing_string(usbcom_t com, void *utf16, unsigned size
     warnx("cp2130otp_get_manufacturing_string: size_of_str is too small (%d), has to be greater than or equal to 124", size_of_utf16);
     return;
   }
-  usbcom_control_msg(com, 0xc0, 0x62, 0, 0, buf, 64);
+  usbcom_control_msg(dev->com, 0xc0, 0x62, 0, 0, buf, 64);
   len = buf[0];
   if (buf[1] != 0x03) warnx("cp2130otp_get_manufacturing_string: descriptor type is not 0x03 but 0x%02x", buf[1]);
   if (len > 63) warnx("cp2130otp_get_manufacturing_string: length is more than 63 (got %d)", len);
   memset(utf16, 0, size_of_utf16);
   memcpy(utf16, buf + 2, len - 3); /* buf[63] is not part of the string */
   if (len == 63) {
-    usbcom_control_msg(com, 0xc0, 0x64, 0, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0xc0, 0x64, 0, 0, buf, 64);
     memcpy(utf16+61, buf, 63);     /* buf[63] is not part of the string */
   }
 }
 
-void cp2130otp_get_pin_config(usbcom_t com, void *buf)
+void cp2130otp_get_pin_config(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(com, 0xc0, 0x6c, 0, 0, buf, 20);
+  usbcom_control_msg(dev->com, 0xc0, 0x6c, 0, 0, buf, 20);
 }
 
-void cp2130otp_get_product_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+void cp2130otp_get_product_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
 {
   unsigned char buf[64];
   int len;
@@ -254,28 +278,28 @@ void cp2130otp_get_product_string(usbcom_t com, void *utf16, unsigned size_of_ut
     warnx("cp2130otp_get_product_string: size_of_utf16 is too small (%d), has to be greater than or equal to 124", size_of_utf16);
     return;
   }
-  usbcom_control_msg(com, 0xc0, 0x66, 0, 0, buf, 64);
+  usbcom_control_msg(dev->com, 0xc0, 0x66, 0, 0, buf, 64);
   len = buf[0];
   if (buf[1] != 0x03) warnx("cp2130otp_get_product_string: descriptor type is not 0x03 but 0x%02x", buf[1]);
   if (len > 63) warnx("cp2130otp_get_product_string: length is more than 63 (got %d)", len);
   memset(utf16, 0, size_of_utf16);
   memcpy(utf16, buf + 2, len - 3); /* buf[63] is not part of the string */
   if (len == 63) {
-    usbcom_control_msg(com, 0xc0, 0x68, 0, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0xc0, 0x68, 0, 0, buf, 64);
     memcpy(utf16+61, buf, 63);     /* buf[63] is not part of the string */
   }
 }
 
-void cp2130otp_get_prom_config(usbcom_t com, int index, void *buf)
+void cp2130otp_get_prom_config(cp2130_t dev, int index, void *buf)
 {
-  usbcom_control_msg(com, 0xc0, 0x70, 0, index, buf, 64);
+  usbcom_control_msg(dev->com, 0xc0, 0x70, 0, index, buf, 64);
 }
 
-void cp2130otp_get_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+void cp2130otp_get_serial_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
 {
   unsigned char buf[64];
   int len;
-  usbcom_control_msg(com, 0xc0, 0x6a, 0, 0, buf, 64);
+  usbcom_control_msg(dev->com, 0xc0, 0x6a, 0, 0, buf, 64);
   len = buf[0];
   if (buf[1] != 0x03) warnx("cp2130otp_get_serial_string: descriptor type is not 0x03 but 0x%02x", buf[1]);
   if (len > 63) warnx("cp2130otp_get_serial_string: length is more than 63 (got %d)", len);
@@ -287,9 +311,9 @@ void cp2130otp_get_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf
   }
 }
 
-void cp2130otp_get_usb_config(usbcom_t com, void *buf)
+void cp2130otp_get_usb_config(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(com, 0xc0, 0x60, 0, 0, buf, 9);
+  usbcom_control_msg(dev->com, 0xc0, 0x60, 0, 0, buf, 9);
 }
 
 /*
@@ -299,17 +323,17 @@ void cp2130otp_get_usb_config(usbcom_t com, void *buf)
 
 static int memory_key = 0;  /* should belong to device context */
 
-void cp2130otp_set_memory_key(usbcom_t com, int key)
+void cp2130otp_set_memory_key(cp2130_t dev, int key)
 {
   memory_key = key;
 }
 
-void cp2130otp_set_lock_byte(usbcom_t com, void *buf)
+void cp2130otp_set_lock_byte(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(com, 0x40, 0x6f, memory_key, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0x40, 0x6f, memory_key, 0, buf, 2);
 }
 
-void cp2130otp_set_manufacturing_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+void cp2130otp_set_manufacturing_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
 {
   unsigned char buf[64];
 
@@ -319,7 +343,7 @@ void cp2130otp_set_manufacturing_string(usbcom_t com, void *utf16, unsigned size
     buf[0] = size_of_utf16 + 2;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, size_of_utf16);
-    usbcom_control_msg(com, 0x40, 0x63, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x63, memory_key, 0, buf, 64);
 
   } else if (size_of_utf16 < 124) {
 
@@ -327,11 +351,11 @@ void cp2130otp_set_manufacturing_string(usbcom_t com, void *utf16, unsigned size
     buf[0] = 61;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, 61);
-    usbcom_control_msg(com, 0x40, 0x63, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x63, memory_key, 0, buf, 64);
 
     memset(buf, 0 , 64);
     memcpy(buf, utf16 + 61, size_of_utf16 - 61);
-    usbcom_control_msg(com, 0x40, 0x65, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x65, memory_key, 0, buf, 64);
 
   } else{
 
@@ -340,12 +364,12 @@ void cp2130otp_set_manufacturing_string(usbcom_t com, void *utf16, unsigned size
   }
 }
 
-void cp2130otp_set_pin_config(usbcom_t com, void *buf)
+void cp2130otp_set_pin_config(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(com, 0x40, 0x6d, memory_key, 0, buf, 20);
+  usbcom_control_msg(dev->com, 0x40, 0x6d, memory_key, 0, buf, 20);
 }
 
-void cp2130otp_set_product_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+void cp2130otp_set_product_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
 {
   unsigned char buf[64];
 
@@ -355,7 +379,7 @@ void cp2130otp_set_product_string(usbcom_t com, void *utf16, unsigned size_of_ut
     buf[0] = size_of_utf16 + 2;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, size_of_utf16);
-    usbcom_control_msg(com, 0x40, 0x67, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x67, memory_key, 0, buf, 64);
 
   } else if (size_of_utf16 < 124) {
 
@@ -363,11 +387,11 @@ void cp2130otp_set_product_string(usbcom_t com, void *utf16, unsigned size_of_ut
     buf[0] = 61;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, 61);
-    usbcom_control_msg(com, 0x40, 0x67, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x67, memory_key, 0, buf, 64);
 
     memset(buf, 0 , 64);
     memcpy(buf, utf16 + 61, size_of_utf16 - 61);
-    usbcom_control_msg(com, 0x40, 0x69, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x69, memory_key, 0, buf, 64);
 
   } else{
 
@@ -376,16 +400,16 @@ void cp2130otp_set_product_string(usbcom_t com, void *utf16, unsigned size_of_ut
   }
 }
 
-void cp2130otp_set_prom_config(usbcom_t com, int index, void *buf)
+void cp2130otp_set_prom_config(cp2130_t dev, int index, void *buf)
 {
   if ((index >= 0)  && (index <= 7)) {
-    usbcom_control_msg(com, 0x40, 0x71, memory_key, index, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x71, memory_key, index, buf, 64);
   } else {
     warnx("cp2130otp_set_prom_config: invalid index (%d), ignored", index);
   }
 }
 
-void cp2130otp_set_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+void cp2130otp_set_serial_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
 {
   unsigned char buf[64];
 
@@ -395,7 +419,7 @@ void cp2130otp_set_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf
     buf[0] = size_of_utf16 + 2;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, size_of_utf16);
-    usbcom_control_msg(com, 0x40, 0x67, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x67, memory_key, 0, buf, 64);
 
   } else{
 
@@ -404,26 +428,26 @@ void cp2130otp_set_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf
   }
 }
 
-void cp2130otp_set_usb_config(usbcom_t com, void *buf)
+void cp2130otp_set_usb_config(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(com, 0x40, 0x61, memory_key, 0, buf, 10);
+  usbcom_control_msg(dev->com, 0x40, 0x61, memory_key, 0, buf, 10);
 }
 
 /*
  *       Convenience
  */
 
-int cp2130_get_event_counter_count(usbcom_t com)
+int cp2130_get_event_counter_count(cp2130_t dev)
 {
   int mode, count;
-  cp2130_get_event_counter(com, &mode, &count);
+  cp2130_get_event_counter(dev, &mode, &count);
   return count;
 }
 
-int cp2130_get_event_counter_mode(usbcom_t com)
+int cp2130_get_event_counter_mode(cp2130_t dev)
 {
   int mode, count;
-  cp2130_get_event_counter(com, &mode, &count);
+  cp2130_get_event_counter(dev, &mode, &count);
   return mode;
 }
 
@@ -441,39 +465,39 @@ enum {
       GPIO_10 = 0x4000,
 };
 
-int  cp2130_get_gpio00(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_00);}
-int  cp2130_get_gpio01(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_01);}
-int  cp2130_get_gpio02(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_02);}
-int  cp2130_get_gpio03(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_03);}
-int  cp2130_get_gpio04(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_04);}
-int  cp2130_get_gpio05(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_05);}
-int  cp2130_get_gpio06(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_06);}
-int  cp2130_get_gpio07(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_07);}
-int  cp2130_get_gpio08(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_08);}
-int  cp2130_get_gpio09(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_09);}
-int  cp2130_get_gpio10(usbcom_t com)   {return (cp2130_get_gpio_values(com)&GPIO_10);}
-void cp2130_set_gpio00(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_00, GPIO_00);}
-void cp2130_set_gpio01(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_01, GPIO_01);}
-void cp2130_set_gpio02(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_02, GPIO_02);}
-void cp2130_set_gpio03(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_03, GPIO_03);}
-void cp2130_set_gpio04(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_04, GPIO_04);}
-void cp2130_set_gpio05(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_05, GPIO_05);}
-void cp2130_set_gpio06(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_06, GPIO_06);}
-void cp2130_set_gpio07(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_07, GPIO_07);}
-void cp2130_set_gpio08(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_08, GPIO_08);}
-void cp2130_set_gpio09(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_09, GPIO_09);}
-void cp2130_set_gpio10(usbcom_t com)   {cp2130_set_gpio_values(com, GPIO_10, GPIO_10);}
-void cp2130_reset_gpio00(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_00);}
-void cp2130_reset_gpio01(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_01);}
-void cp2130_reset_gpio02(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_02);}
-void cp2130_reset_gpio03(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_03);}
-void cp2130_reset_gpio04(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_04);}
-void cp2130_reset_gpio05(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_05);}
-void cp2130_reset_gpio06(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_06);}
-void cp2130_reset_gpio07(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_07);}
-void cp2130_reset_gpio08(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_08);}
-void cp2130_reset_gpio09(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_09);}
-void cp2130_reset_gpio10(usbcom_t com) {cp2130_set_gpio_values(com,       0, GPIO_10);}
+int  cp2130_get_gpio00(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_00);}
+int  cp2130_get_gpio01(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_01);}
+int  cp2130_get_gpio02(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_02);}
+int  cp2130_get_gpio03(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_03);}
+int  cp2130_get_gpio04(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_04);}
+int  cp2130_get_gpio05(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_05);}
+int  cp2130_get_gpio06(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_06);}
+int  cp2130_get_gpio07(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_07);}
+int  cp2130_get_gpio08(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_08);}
+int  cp2130_get_gpio09(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_09);}
+int  cp2130_get_gpio10(cp2130_t dev)   {return (cp2130_get_gpio_values(dev)&GPIO_10);}
+void cp2130_set_gpio00(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_00, GPIO_00);}
+void cp2130_set_gpio01(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_01, GPIO_01);}
+void cp2130_set_gpio02(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_02, GPIO_02);}
+void cp2130_set_gpio03(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_03, GPIO_03);}
+void cp2130_set_gpio04(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_04, GPIO_04);}
+void cp2130_set_gpio05(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_05, GPIO_05);}
+void cp2130_set_gpio06(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_06, GPIO_06);}
+void cp2130_set_gpio07(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_07, GPIO_07);}
+void cp2130_set_gpio08(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_08, GPIO_08);}
+void cp2130_set_gpio09(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_09, GPIO_09);}
+void cp2130_set_gpio10(cp2130_t dev)   {cp2130_set_gpio_values(dev, GPIO_10, GPIO_10);}
+void cp2130_reset_gpio00(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_00);}
+void cp2130_reset_gpio01(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_01);}
+void cp2130_reset_gpio02(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_02);}
+void cp2130_reset_gpio03(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_03);}
+void cp2130_reset_gpio04(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_04);}
+void cp2130_reset_gpio05(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_05);}
+void cp2130_reset_gpio06(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_06);}
+void cp2130_reset_gpio07(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_07);}
+void cp2130_reset_gpio08(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_08);}
+void cp2130_reset_gpio09(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_09);}
+void cp2130_reset_gpio10(cp2130_t dev) {cp2130_set_gpio_values(dev,       0, GPIO_10);}
 
 #ifdef CP2130_MAIN
 
@@ -498,7 +522,7 @@ void utf16_to_utf8(char *utf16, size_t utf16len,
   iconv_close(conv);
 }
 
-void print_dev_info(usbcom_t com)
+void print_dev_info(cp2130_t dev)
 {
   enum {
         BUFLEN = 256
@@ -507,12 +531,12 @@ void print_dev_info(usbcom_t com)
   char utf8[BUFLEN];
   int major, minor;
 
-  cp2130_get_readonly_version(com, &major, &minor);
+  cp2130_get_readonly_version(dev, &major, &minor);
   printf("Connected. cp2130 version %d.%d\n", major, minor);
 
   memset(utf16, 0, BUFLEN);
   memset(utf8,  0, BUFLEN);
-  cp2130otp_get_manufacturing_string(com, utf16, BUFLEN);
+  cp2130otp_get_manufacturing_string(dev, utf16, BUFLEN);
   utf16_to_utf8(utf16, BUFLEN, utf8, BUFLEN);
   /* dump("utf16", utf16, BUFLEN);
      dump("utf8",  utf8,  BUFLEN); */
@@ -520,17 +544,17 @@ void print_dev_info(usbcom_t com)
 
   memset(utf16, 0, BUFLEN);
   memset(utf8,  0, BUFLEN);
-  cp2130otp_get_product_string(com, utf16, BUFLEN);
+  cp2130otp_get_product_string(dev, utf16, BUFLEN);
   utf16_to_utf8(utf16, BUFLEN, utf8, BUFLEN);
   printf("product: \"%s\"\n", utf8);
 
   memset(utf16, 0, BUFLEN);
   memset(utf8,  0, BUFLEN);
-  cp2130otp_get_serial_string(com, utf16, BUFLEN);
+  cp2130otp_get_serial_string(dev, utf16, BUFLEN);
   utf16_to_utf8(utf16, BUFLEN, utf8, BUFLEN);
   printf("serial: \"%s\"\n", utf8);
 
-  cp2130otp_get_usb_config(com, utf8);
+  cp2130otp_get_usb_config(dev, utf8);
   printf("USB device release number: %d.%d\n", utf8[6], utf8[7]);
   if (utf8[8] == 1)
     printf("USB high priority: write\n");
@@ -543,30 +567,28 @@ void print_dev_info(usbcom_t com)
 int main(int c, char *v[])
 {
   int vendor, product, n;
-  usbcom_t com;
+  cp2130_t dev;
 
   printf("cp2130 main\n");
 
   vendor  = 0x10c4;
   product = 0x87a0;
 
-  com = usbcom_open(vendor, product);
-  if (com == NULL)
-    err(1, "cp2130: open failed");
+  dev = cp2130_open(vendor, product);
 
-  print_dev_info(com);
+  print_dev_info(dev);
 
   for (n=0; n < 2; n++) {
-    printf("LED ON:  Event Counter=%4d\n", cp2130_get_event_counter_count(com));
-    cp2130_reset_gpio07(com);
+    printf("LED ON:  Event Counter=%4d\n", cp2130_get_event_counter_count(dev));
+    cp2130_reset_gpio07(dev);
     sleep(1);
-    printf("LED OFF: Event Counter=%4d\n", cp2130_get_event_counter_count(com));
-    cp2130_set_gpio07(com);
+    printf("LED OFF: Event Counter=%4d\n", cp2130_get_event_counter_count(dev));
+    cp2130_set_gpio07(dev);
     sleep(1);
   }
 
   printf("bye\n");
-  usbcom_close(com);
+  cp2130_close(dev);
 }
 
 #endif
