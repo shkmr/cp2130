@@ -15,12 +15,15 @@
 #include "usbcom.h"
 #include "cp2130.h"
 
+/*
+ *      Device context
+ */
+
 struct cp2130 {
   usbcom_t com;
   unsigned char wrbuf[CP2130_WRBUFSIZ];
   int memory_key;
 };
-
 
 cp2130_t cp2130_open(int vendor_id, int product_id)
 {
