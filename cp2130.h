@@ -1,4 +1,11 @@
-/* cp2130 API and Convenience functions */
+/*
+ *      CP2130 API
+ *
+ *      https://www.silabs.com/documents/public/application-notes/AN792.pdf
+ *
+ *                                       written by skimu@me.com
+ */
+
 #ifndef CP2130_H
 #define CP2130_H
 
