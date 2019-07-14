@@ -321,16 +321,14 @@ void cp2130otp_get_usb_config(cp2130_t dev, void *buf)
  *
  */
 
-static int memory_key = 0;  /* should belong to device context */
-
 void cp2130otp_set_memory_key(cp2130_t dev, int key)
 {
-  memory_key = key;
+  dev->memory_key = key;
 }
 
 void cp2130otp_set_lock_byte(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(dev->com, 0x40, 0x6f, memory_key, 0, buf, 2);
+  usbcom_control_msg(dev->com, 0x40, 0x6f, dev->memory_key, 0, buf, 2);
 }
 
 void cp2130otp_set_manufacturing_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
@@ -343,7 +341,7 @@ void cp2130otp_set_manufacturing_string(cp2130_t dev, void *utf16, unsigned size
     buf[0] = size_of_utf16 + 2;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, size_of_utf16);
-    usbcom_control_msg(dev->com, 0x40, 0x63, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x63, dev->memory_key, 0, buf, 64);
 
   } else if (size_of_utf16 < 124) {
 
@@ -351,11 +349,11 @@ void cp2130otp_set_manufacturing_string(cp2130_t dev, void *utf16, unsigned size
     buf[0] = 61;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, 61);
-    usbcom_control_msg(dev->com, 0x40, 0x63, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x63, dev->memory_key, 0, buf, 64);
 
     memset(buf, 0 , 64);
     memcpy(buf, utf16 + 61, size_of_utf16 - 61);
-    usbcom_control_msg(dev->com, 0x40, 0x65, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x65, dev->memory_key, 0, buf, 64);
 
   } else{
 
@@ -366,7 +364,7 @@ void cp2130otp_set_manufacturing_string(cp2130_t dev, void *utf16, unsigned size
 
 void cp2130otp_set_pin_config(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(dev->com, 0x40, 0x6d, memory_key, 0, buf, 20);
+  usbcom_control_msg(dev->com, 0x40, 0x6d, dev->memory_key, 0, buf, 20);
 }
 
 void cp2130otp_set_product_string(cp2130_t dev, void *utf16, unsigned size_of_utf16)
@@ -379,7 +377,7 @@ void cp2130otp_set_product_string(cp2130_t dev, void *utf16, unsigned size_of_ut
     buf[0] = size_of_utf16 + 2;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, size_of_utf16);
-    usbcom_control_msg(dev->com, 0x40, 0x67, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x67, dev->memory_key, 0, buf, 64);
 
   } else if (size_of_utf16 < 124) {
 
@@ -387,11 +385,11 @@ void cp2130otp_set_product_string(cp2130_t dev, void *utf16, unsigned size_of_ut
     buf[0] = 61;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, 61);
-    usbcom_control_msg(dev->com, 0x40, 0x67, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x67, dev->memory_key, 0, buf, 64);
 
     memset(buf, 0 , 64);
     memcpy(buf, utf16 + 61, size_of_utf16 - 61);
-    usbcom_control_msg(dev->com, 0x40, 0x69, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x69, dev->memory_key, 0, buf, 64);
 
   } else{
 
@@ -403,7 +401,7 @@ void cp2130otp_set_product_string(cp2130_t dev, void *utf16, unsigned size_of_ut
 void cp2130otp_set_prom_config(cp2130_t dev, int index, void *buf)
 {
   if ((index >= 0)  && (index <= 7)) {
-    usbcom_control_msg(dev->com, 0x40, 0x71, memory_key, index, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x71, dev->memory_key, index, buf, 64);
   } else {
     warnx("cp2130otp_set_prom_config: invalid index (%d), ignored", index);
   }
@@ -419,7 +417,7 @@ void cp2130otp_set_serial_string(cp2130_t dev, void *utf16, unsigned size_of_utf
     buf[0] = size_of_utf16 + 2;
     buf[1] = 0x03;
     memcpy(buf+2, utf16, size_of_utf16);
-    usbcom_control_msg(dev->com, 0x40, 0x67, memory_key, 0, buf, 64);
+    usbcom_control_msg(dev->com, 0x40, 0x67, dev->memory_key, 0, buf, 64);
 
   } else{
 
@@ -430,7 +428,7 @@ void cp2130otp_set_serial_string(cp2130_t dev, void *utf16, unsigned size_of_utf
 
 void cp2130otp_set_usb_config(cp2130_t dev, void *buf)
 {
-  usbcom_control_msg(dev->com, 0x40, 0x61, memory_key, 0, buf, 10);
+  usbcom_control_msg(dev->com, 0x40, 0x61, dev->memory_key, 0, buf, 10);
 }
 
 /*
