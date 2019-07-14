@@ -16,6 +16,7 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/IOMessage.h>
 #include <IOKit/usb/IOUSBLib.h>
+#include <err.h>
 
 #include "usbcom.h"
 
@@ -27,7 +28,7 @@ struct usbcom {
 };
 
 static int debug = 0;
-usbcom_set_debug_level(int x)
+void usbcom_set_debug_level(int x)
 {
   debug = x;
 }
@@ -322,6 +323,24 @@ int usbcom_npipe(usbcom_t com)
 
   return (int)npipe;
 }
+
+int usbcom_control_msg(usbcom_t com, int type, int req, int val, int index, void *buf, int size)
+{
+  int r;
+  IOUSBDevRequest devreq;
+
+  devreq.bmRequestType = type;
+  devreq.bRequest      = req;
+  devreq.wValue        = val;
+  devreq.wIndex        = index;
+  devreq.wLength       = size;
+  devreq.pData         = buf;
+
+  r = (*com->intf)->ControlRequest(com->intf, 0, &devreq);
+
+  return 0;
+}
+
 
 int usbcom_send(usbcom_t com, int pipe, void *buf, int size)
 {

@@ -1,9 +1,9 @@
 ###
 ### libusb-0.1
 ###
-CFLAGS = -DLIBUSB01
-USBCOM = usbcom_libusb01.o
-LIBS=-lusb
+#CFLAGS = -DLIBUSB01
+#USBCOM = usbcom_libusb01.o
+#LIBS=-lusb
 
 ###
 ### libusb-1.0
@@ -14,8 +14,9 @@ LIBS=-lusb
 ###
 ###   MacOSX
 ###
-#CFLAGS = -DMacOSX
-#USBCOM = usbcom_mac.o
+CFLAGS = -DMacOSX
+USBCOM = usbcom_mac.o
+LIBS=-framework CoreFoundation -framework IOKit
 
 all : test_cp2130
 
