@@ -20,16 +20,26 @@
  */
 
 struct cp2130 {
-  usbcom_t com;
-  unsigned char wrbuf[CP2130_WRBUFSIZ];
-  int memory_key;
+  usbcom_t       com;
+  unsigned char *wrbuf;
+  size_t         wrbufsiz;
+  int            memory_key;
 };
+
+static size_t default_wrbufsiz = 512;
+
+void cp2130_set_default_wrbufsiz(size_t bufsiz)
+{
+  default_wrbufsiz = bufsiz;
+}
 
 cp2130_t cp2130_open(int vendor_id, int product_id)
 {
   cp2130_t dev;
 
   if ((dev = (cp2130_t)malloc(sizeof(struct cp2130)))  == NULL) err(1, NULL);
+  if ((dev->wrbuf = (unsigned char *)malloc(default_wrbufsiz)) == NULL) err(1, NULL);
+  dev->wrbufsiz = default_wrbufsiz;
   if ((dev->com = usbcom_open(vendor_id, product_id)) == NULL)  err(1, "cp2130: usb device open failed");
   dev->memory_key = 0;
 

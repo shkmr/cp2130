@@ -6,6 +6,7 @@ enum { CP2130_WRBUFSIZ = 512 };
 
 typedef struct cp2130 *cp2130_t;
 
+void     cp2130_set_default_wrbufsiz(size_t newbufsiz);
 cp2130_t cp2130_open(int vendor_id, int product_id);
 void     cp2130_close(cp2130_t dev);
 
