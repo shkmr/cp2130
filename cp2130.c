@@ -535,9 +535,7 @@ void utf16_to_utf8(char *utf16, size_t utf16len,
 
 void print_dev_info(cp2130_t dev)
 {
-  enum {
-        BUFLEN = 256
-  };
+  enum { BUFLEN = 256 };
   char utf16[BUFLEN];
   char utf8[BUFLEN];
   int major, minor;
