@@ -2,8 +2,6 @@
 #ifndef CP2130_H
 #define CP2130_H
 
-enum { CP2130_WRBUFSIZ = 512 };
-
 typedef struct cp2130 *cp2130_t;
 
 void     cp2130_set_default_wrbufsiz(size_t newbufsiz);
