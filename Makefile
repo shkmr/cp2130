@@ -1,19 +1,19 @@
 ###
-### libusb-0.1
+###    libusb-0.1
 ###
 CFLAGS = -DLIBUSB01
 USBCOM = usbcom_libusb01.o
 LIBS=-lusb
 
 ###
-### libusb-1.0
+###    libusb-1.0
 ###
 #CFLAGS = -DLIBUSB10
 #USBCOM = usbcom_libusb10.o
 #LIBS=-lusb-1.0
 
 ###
-###   MacOSX
+###     macOS
 ###
 #CFLAGS = -DMacOSX
 #USBCOM = usbcom_mac.o
