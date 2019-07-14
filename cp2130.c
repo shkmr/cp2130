@@ -224,7 +224,6 @@ void cp2130_set_spi_delay(cp2130_t dev, int channel,
                           int inter_byte_delay,
                           int post_assert_delay,
                           int pre_deassert_delay)
-
 {
   unsigned char buf[8];
   buf[0] = channel;
