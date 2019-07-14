@@ -10,27 +10,32 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <err.h>
 #include "usbcom.h"
+#include "cp2130.h"
 
 /*
- *      API
+ *      API :
+ *
+ *      TODO :  Check parameter range and reject invalid parameter.
+ *
  */
 
 /*
- *       RequestType = 0xC0,   Device-to-Host, Vendor, Device
+ *       RequestType = 0xc0,   Device-to-Host, Vendor, Device
  */
 int cp2130_get_clock_divider(usbcom_t com)
 {
   unsigned char buf[1];
-  usbcom_control_msg(com, 0xC0, 0x46, 0, 0, buf, 1);
+  usbcom_control_msg(com, 0xc0, 0x46, 0, 0, buf, 1);
   return (int)buf[0];
 }
 
 void cp2130_get_event_counter(usbcom_t com, int *mode, int *count)
 {
   unsigned char buf[3];
-  usbcom_control_msg(com, 0xC0, 0x44, 0, 0, buf, 3);
+  usbcom_control_msg(com, 0xc0, 0x44, 0, 0, buf, 3);
   *mode = buf[0];
   *count = (buf[1]<<8)+buf[2];
 }
@@ -38,14 +43,14 @@ void cp2130_get_event_counter(usbcom_t com, int *mode, int *count)
 int cp2130_get_full_threshold(usbcom_t com)
 {
   unsigned char buf[1];
-  usbcom_control_msg(com, 0xC0, 0x34, 0, 0, buf, 1);
+  usbcom_control_msg(com, 0xc0, 0x34, 0, 0, buf, 1);
   return buf[0];
 }
 
 void cp2130_get_gpio_chip_select(usbcom_t com, int *ch, int *pin)
 {
   unsigned char buf[4];
-  usbcom_control_msg(com, 0xC0, 0x24, 0, 0, buf, 4);
+  usbcom_control_msg(com, 0xc0, 0x24, 0, 0, buf, 4);
   *ch  = (buf[0]<<8)+buf[1];
   *pin = (buf[2]<<8)+buf[3];
 }
@@ -53,7 +58,7 @@ void cp2130_get_gpio_chip_select(usbcom_t com, int *ch, int *pin)
 void cp2130_get_gpio_mode_and_level(usbcom_t com, int *mode, int *level)
 {
   unsigned char buf[4];
-  usbcom_control_msg(com, 0xC0, 0x22, 0, 0, buf, 4);
+  usbcom_control_msg(com, 0xc0, 0x22, 0, 0, buf, 4);
   *mode  = (buf[0]<<8)+buf[1];
   *level = (buf[2]<<8)+buf[3];
 }
@@ -62,7 +67,7 @@ int cp2130_get_gpio_values(usbcom_t com)
 {
   int r;
   unsigned char buf[2];
-  usbcom_control_msg(com, 0xC0, 0x20, 0, 0, buf, 2);
+  usbcom_control_msg(com, 0xc0, 0x20, 0, 0, buf, 2);
   r = (buf[0]<<8)+buf[1];
   return r;
 }
@@ -70,13 +75,13 @@ int cp2130_get_gpio_values(usbcom_t com)
 int cp2130_get_rtr_state(usbcom_t com)
 {
   unsigned char buf[1];
-  usbcom_control_msg(com, 0xC0, 0x36, 0, 0, buf, 1);
+  usbcom_control_msg(com, 0xc0, 0x36, 0, 0, buf, 1);
   return buf[0];
 }
 
 void cp2130_get_spi_word(usbcom_t com, unsigned char *buf)
 {
-  usbcom_control_msg(com, 0xC0, 0x30, 0, 0, buf, 11);
+  usbcom_control_msg(com, 0xc0, 0x30, 0, 0, buf, 11);
 }
 
 void cp2130_get_spi_delay(usbcom_t com, int channel,
@@ -87,7 +92,7 @@ void cp2130_get_spi_delay(usbcom_t com, int channel,
 
 {
   unsigned char buf[8];
-  usbcom_control_msg(com, 0xC0, 0x32, channel, 0, buf, 8);
+  usbcom_control_msg(com, 0xc0, 0x32, 0, channel, buf, 8);
   if (channel != buf[0])
     warnx("cp2130_get_spi_delay ch conflict given %d, but get %d", channel, buf[0]);
   *mask  = buf[1];
@@ -99,7 +104,7 @@ void cp2130_get_spi_delay(usbcom_t com, int channel,
 void cp2130_get_readonly_version(usbcom_t com, int *major, int *minor)
 {
   unsigned char buf[2];
-  usbcom_control_msg(com, 0xC0, 0x11, 0, 0, buf, 2);
+  usbcom_control_msg(com, 0xc0, 0x11, 0, 0, buf, 2);
   *major = buf[0];
   *minor = buf[1];
 }
@@ -197,10 +202,217 @@ void cp2130_set_spi_delay(usbcom_t com, int channel,
   usbcom_control_msg(com, 0x40, 0x33, 0, 0, buf, 8);
 }
 
+/*
+ *       OTP ROM Configuration Commands Part 0xc0,  Devicet-to-Host
+ */
+
+int cp2130otp_get_lock_byte(usbcom_t com)
+{
+  unsigned char buf[2];
+  usbcom_control_msg(com, 0xc0, 0x6e, 0, 0, buf, 2);
+  return (buf[0]<<8)+buf[1];
+}
+
+void cp2130otp_get_manufacturing_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+{
+  unsigned char buf[64];
+  int len;
+
+  /*
+   *    TODO:  Not rejecting small str size, but return string as much as possible.
+   */
+  if (size_of_utf16 < 124) {
+    warnx("cp2130otp_get_manufacturing_string: size_of_str is too small (%d), has to be greater than or equal to 124", size_of_utf16);
+    return;
+  }
+  usbcom_control_msg(com, 0xc0, 0x62, 0, 0, buf, 64);
+  len = buf[0];
+  if (buf[1] != 0x03) warnx("cp2130otp_get_manufacturing_string: descriptor type is not 0x03 but 0x%02x", buf[1]);
+  if (len > 63) warnx("cp2130otp_get_manufacturing_string: length is more than 63 (got %d)", len);
+  memset(utf16, 0, size_of_utf16);
+  memcpy(utf16, buf + 2, len - 3); /* buf[63] is not part of the string */
+  if (len == 63) {
+    usbcom_control_msg(com, 0xc0, 0x64, 0, 0, buf, 64);
+    memcpy(utf16+61, buf, 63);     /* buf[63] is not part of the string */
+  }
+}
+
+void cp2130otp_get_pin_config(usbcom_t com, void *buf)
+{
+  usbcom_control_msg(com, 0xc0, 0x6c, 0, 0, buf, 20);
+}
+
+void cp2130otp_get_product_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+{
+  unsigned char buf[64];
+  int len;
+
+  /*
+   *    TODO:  Not rejecting small str size, but return string as much as possible.
+   */
+  if (size_of_utf16 < 124) {
+    warnx("cp2130otp_get_product_string: size_of_utf16 is too small (%d), has to be greater than or equal to 124", size_of_utf16);
+    return;
+  }
+  usbcom_control_msg(com, 0xc0, 0x66, 0, 0, buf, 64);
+  len = buf[0];
+  if (buf[1] != 0x03) warnx("cp2130otp_get_product_string: descriptor type is not 0x03 but 0x%02x", buf[1]);
+  if (len > 63) warnx("cp2130otp_get_product_string: length is more than 63 (got %d)", len);
+  memset(utf16, 0, size_of_utf16);
+  memcpy(utf16, buf + 2, len - 3); /* buf[63] is not part of the string */
+  if (len == 63) {
+    usbcom_control_msg(com, 0xc0, 0x68, 0, 0, buf, 64);
+    memcpy(utf16+61, buf, 63);     /* buf[63] is not part of the string */
+  }
+}
+
+void cp2130otp_get_prom_config(usbcom_t com, int index, void *buf)
+{
+  usbcom_control_msg(com, 0xc0, 0x70, 0, index, buf, 64);
+}
+
+void cp2130otp_get_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+{
+  unsigned char buf[64];
+  int len;
+  usbcom_control_msg(com, 0xc0, 0x6a, 0, 0, buf, 64);
+  len = buf[0];
+  if (buf[1] != 0x03) warnx("cp2130otp_get_serial_string: descriptor type is not 0x03 but 0x%02x", buf[1]);
+  if (len > 63) warnx("cp2130otp_get_serial_string: length is more than 63 (got %d)", len);
+  memset(utf16, 0, size_of_utf16);
+  if (size_of_utf16 > len - 3) {
+    memcpy(utf16, buf + 2, len - 3);
+  } else {
+    memcpy(utf16, buf + 2, size_of_utf16);
+  }
+}
+
+void cp2130otp_get_usb_config(usbcom_t com, void *buf)
+{
+  usbcom_control_msg(com, 0xc0, 0x60, 0, 0, buf, 9);
+}
+
+/*
+ *       OTP ROM Configuration Commands Part 0x40,  Host-to-Device
+ *
+ */
+
+static int memory_key = 0;  /* should belong to device context */
+
+void cp2130otp_set_memory_key(usbcom_t com, int key)
+{
+  memory_key = key;
+}
+
+void cp2130otp_set_lock_byte(usbcom_t com, void *buf)
+{
+  usbcom_control_msg(com, 0x40, 0x6f, memory_key, 0, buf, 2);
+}
+
+void cp2130otp_set_manufacturing_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+{
+  unsigned char buf[64];
+
+  if (size_of_utf16 < 61) {
+
+    memset(buf, 0 , 64);
+    buf[0] = size_of_utf16 + 2;
+    buf[1] = 0x03;
+    memcpy(buf+2, utf16, size_of_utf16);
+    usbcom_control_msg(com, 0x40, 0x63, memory_key, 0, buf, 64);
+
+  } else if (size_of_utf16 < 124) {
+
+    memset(buf, 0 , 64);
+    buf[0] = 61;
+    buf[1] = 0x03;
+    memcpy(buf+2, utf16, 61);
+    usbcom_control_msg(com, 0x40, 0x63, memory_key, 0, buf, 64);
+
+    memset(buf, 0 , 64);
+    memcpy(buf, utf16 + 61, size_of_utf16 - 61);
+    usbcom_control_msg(com, 0x40, 0x65, memory_key, 0, buf, 64);
+
+  } else{
+
+    errx(1, "cp2130otp_set_manufacturing_string: string too large (%d)", size_of_utf16);
+
+  }
+}
+
+void cp2130otp_set_pin_config(usbcom_t com, void *buf)
+{
+  usbcom_control_msg(com, 0x40, 0x6d, memory_key, 0, buf, 20);
+}
+
+void cp2130otp_set_product_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+{
+  unsigned char buf[64];
+
+  if (size_of_utf16 < 61) {
+
+    memset(buf, 0 , 64);
+    buf[0] = size_of_utf16 + 2;
+    buf[1] = 0x03;
+    memcpy(buf+2, utf16, size_of_utf16);
+    usbcom_control_msg(com, 0x40, 0x67, memory_key, 0, buf, 64);
+
+  } else if (size_of_utf16 < 124) {
+
+    memset(buf, 0 , 64);
+    buf[0] = 61;
+    buf[1] = 0x03;
+    memcpy(buf+2, utf16, 61);
+    usbcom_control_msg(com, 0x40, 0x67, memory_key, 0, buf, 64);
+
+    memset(buf, 0 , 64);
+    memcpy(buf, utf16 + 61, size_of_utf16 - 61);
+    usbcom_control_msg(com, 0x40, 0x69, memory_key, 0, buf, 64);
+
+  } else{
+
+    errx(1, "cp2130otp_set_product_string: string too large (%d)", size_of_utf16);
+
+  }
+}
+
+void cp2130otp_set_prom_config(usbcom_t com, int index, void *buf)
+{
+  if ((index >= 0)  && (index <= 7)) {
+    usbcom_control_msg(com, 0x40, 0x71, memory_key, index, buf, 64);
+  } else {
+    warnx("cp2130otp_set_prom_config: invalid index (%d), ignored", index);
+  }
+}
+
+void cp2130otp_set_serial_string(usbcom_t com, void *utf16, unsigned size_of_utf16)
+{
+  unsigned char buf[64];
+
+  if (size_of_utf16 < 60) {
+
+    memset(buf, 0 , 64);
+    buf[0] = size_of_utf16 + 2;
+    buf[1] = 0x03;
+    memcpy(buf+2, utf16, size_of_utf16);
+    usbcom_control_msg(com, 0x40, 0x67, memory_key, 0, buf, 64);
+
+  } else{
+
+    errx(1, "cp2130otp_set_serial_string: string too large (%d)", size_of_utf16);
+
+  }
+}
+
+void cp2130otp_set_usb_config(usbcom_t com, void *buf)
+{
+  usbcom_control_msg(com, 0x40, 0x61, memory_key, 0, buf, 10);
+}
 
 /*
  *       Convenience
  */
+
 int cp2130_get_event_counter_count(usbcom_t com)
 {
   int mode, count;
