@@ -14,7 +14,98 @@
 #include "usbcom.h"
 
 /*
- *       API
+ *      API
+ */
+
+/*
+ *       RequestType = 0xC0,   Device-to-Host, Vendor, Device
+ */
+int cp2130_get_clock_divider(usbcom_t com)
+{
+  unsigned char buf[1];
+  usbcom_control_msg(com, 0xC0, 0x46, 0, 0, buf, 1);
+  return (int)buf[0];
+}
+
+void cp2130_get_event_counter(usbcom_t com, int *mode, int *count)
+{
+  unsigned char buf[3];
+  usbcom_control_msg(com, 0xC0, 0x44, 0, 0, buf, 3);
+  *mode = buf[0];
+  *count = (buf[1]<<8)+buf[2];
+}
+
+int cp2130_get_full_threshold(usbcom_t com)
+{
+  unsigned char buf[1];
+  usbcom_control_msg(com, 0xC0, 0x34, 0, 0, buf, 1);
+  return buf[0];
+}
+
+void cp2130_get_gpio_chip_select(usbcom_t com, int *ch, int *pin)
+{
+  unsigned char buf[4];
+  usbcom_control_msg(com, 0xC0, 0x24, 0, 0, buf, 4);
+  *ch  = (buf[0]<<8)+buf[1];
+  *pin = (buf[2]<<8)+buf[3];
+}
+
+void cp2130_get_gpio_mode_and_level(usbcom_t com, int *mode, int *level)
+{
+  unsigned char buf[4];
+  usbcom_control_msg(com, 0xC0, 0x22, 0, 0, buf, 4);
+  *mode  = (buf[0]<<8)+buf[1];
+  *level = (buf[2]<<8)+buf[3];
+}
+
+int cp2130_get_gpio_values(usbcom_t com)
+{
+  int r;
+  unsigned char buf[2];
+  usbcom_control_msg(com, 0xC0, 0x20, 0, 0, buf, 2);
+  r = (buf[0]<<8)+buf[1];
+  return r;
+}
+
+int cp2130_get_rtr_state(usbcom_t com)
+{
+  unsigned char buf[1];
+  usbcom_control_msg(com, 0xC0, 0x36, 0, 0, buf, 1);
+  return buf[0];
+}
+
+void cp2130_get_spi_word(usbcom_t com, unsigned char *buf)
+{
+  usbcom_control_msg(com, 0xC0, 0x30, 0, 0, buf, 11);
+}
+
+void cp2130_get_spi_delay(usbcom_t com, int channel,
+                          int *mask,
+                          int *inter_byte_delay,
+                          int *post_assert_delay,
+                          int *pre_deassert_delay)
+
+{
+  unsigned char buf[8];
+  usbcom_control_msg(com, 0xC0, 0x32, channel, 0, buf, 8);
+  if (channel != buf[0])
+    warnx("cp2130_get_spi_delay ch conflict given %d, but get %d", channel, buf[0]);
+  *mask  = buf[1];
+  *inter_byte_delay   = (buf[2]<<8)+buf[3];
+  *post_assert_delay  = (buf[4]<<8)+buf[5];
+  *pre_deassert_delay = (buf[6]<<8)+buf[7];
+}
+
+void cp2130_get_readonly_version(usbcom_t com, int *major, int *minor)
+{
+  unsigned char buf[2];
+  usbcom_control_msg(com, 0xC0, 0x11, 0, 0, buf, 2);
+  *major = buf[0];
+  *minor = buf[1];
+}
+
+/*
+ *       RequestType = 0x40,   Host-to-Device, Vendor, Device
  */
 
 void cp2130_reset_device(usbcom_t com)
@@ -29,13 +120,6 @@ void cp2130_set_clock_divider(usbcom_t com, int divider)
   usbcom_control_msg(com, 0x40, 0x47, 0, 0, buf, 1);
 }
 
-int cp2130_get_clock_divider(usbcom_t com)
-{
-  unsigned char buf[1];
-  usbcom_control_msg(com, 0xC0, 0x46, 0, 0, buf, 1);
-  return (int)buf[0];
-}
-
 void cp2130_set_event_counter(usbcom_t com, int mode, int count)
 {
   unsigned char buf[3];
@@ -45,26 +129,11 @@ void cp2130_set_event_counter(usbcom_t com, int mode, int count)
   usbcom_control_msg(com, 0x40, 0x45, 0, 0, buf, 3);
 }
 
-void cp2130_get_event_counter(usbcom_t com, int *mode, int *count)
-{
-  unsigned char buf[3];
-  usbcom_control_msg(com, 0xC0, 0x44, 0, 0, buf, 3);
-  *mode = buf[0];
-  *count = (buf[1]<<8)+buf[2];
-}
-
 void cp2130_set_full_threshold(usbcom_t com, int threshold)
 {
   unsigned char buf[1];
   buf[0] = threshold;
   usbcom_control_msg(com, 0x40, 0x35, 0, 0, buf, 1);
-}
-
-int cp2130_get_full_threshold(usbcom_t com)
-{
-  unsigned char buf[1];
-  usbcom_control_msg(com, 0xC0, 0x34, 0, 0, buf, 1);
-  return buf[0];
 }
 
 void cp2130_set_gpio_chip_select(usbcom_t com, int channel, int control)
@@ -75,14 +144,6 @@ void cp2130_set_gpio_chip_select(usbcom_t com, int channel, int control)
   usbcom_control_msg(com, 0x40, 0x25, 0, 0, buf, 2);
 }
 
-void cp2130_get_gpio_chip_select(usbcom_t com, int *ch, int *pin)
-{
-  unsigned char buf[4];
-  usbcom_control_msg(com, 0xC0, 0x24, 0, 0, buf, 4);
-  *ch  = (buf[0]<<8)+buf[1];
-  *pin = (buf[2]<<8)+buf[3];
-}
-
 void cp2130_set_gpio_mode_and_level(usbcom_t com, int index, int mode, int level)
 {
   unsigned char buf[3];
@@ -90,14 +151,6 @@ void cp2130_set_gpio_mode_and_level(usbcom_t com, int index, int mode, int level
   buf[1] = mode;
   buf[2] = level;
   usbcom_control_msg(com, 0x40, 0x23, 0, 0, buf, 3);
-}
-
-void cp2130_get_gpio_mode_and_level(usbcom_t com, int *mode, int *level)
-{
-  unsigned char buf[4];
-  usbcom_control_msg(com, 0xC0, 0x22, 0, 0, buf, 4);
-  *mode  = (buf[0]<<8)+buf[1];
-  *level = (buf[2]<<8)+buf[3];
 }
 
 void cp2130_set_gpio_values(usbcom_t com, int level, int mask)
@@ -110,27 +163,11 @@ void cp2130_set_gpio_values(usbcom_t com, int level, int mask)
   usbcom_control_msg(com, 0x40, 0x21, 0, 0, buf, 4);
 }
 
-int cp2130_get_gpio_values(usbcom_t com)
-{
-  int r;
-  unsigned char buf[2];
-  usbcom_control_msg(com, 0xC0, 0x20, 0, 0, buf, 2);
-  r = (buf[0]<<8)+buf[1];
-  return r;
-}
-
 void cp2130_set_rtr_stop(usbcom_t com, int val)
 {
   unsigned char buf[1];
   buf[0] = val;
   usbcom_control_msg(com, 0x40, 0x37, 0, 0, buf, 1);
-}
-
-int cp2130_get_rtr_state(usbcom_t com)
-{
-  unsigned char buf[1];
-  usbcom_control_msg(com, 0xC0, 0x36, 0, 0, buf, 1);
-  return buf[0];
 }
 
 void cp2130_set_spi_word(usbcom_t com, int channel, int word)
@@ -139,11 +176,6 @@ void cp2130_set_spi_word(usbcom_t com, int channel, int word)
   buf[0] = channel;
   buf[1] = word;
   usbcom_control_msg(com, 0x40, 0x31, 0, 0, buf, 2);
-}
-
-void cp2130_get_spi_word(usbcom_t com, unsigned char *buf)
-{
-  usbcom_control_msg(com, 0xC0, 0x30, 0, 0, buf, 11);
 }
 
 void cp2130_set_spi_delay(usbcom_t com, int channel,
@@ -165,30 +197,6 @@ void cp2130_set_spi_delay(usbcom_t com, int channel,
   usbcom_control_msg(com, 0x40, 0x33, 0, 0, buf, 8);
 }
 
-void cp2130_get_spi_delay(usbcom_t com, int ch,
-                          int *mask,
-                          int *inter_byte_delay,
-                          int *post_assert_delay,
-                          int *pre_deassert_delay)
-
-{
-  unsigned char buf[8];
-  usbcom_control_msg(com, 0xC0, 0x32, ch, 0, buf, 8);
-  if (ch != buf[0])
-    warnx("cp2130_get_spi_delay ch conflict given %d, but get %d", ch, buf[0]);
-  *mask  = buf[1];
-  *inter_byte_delay   = (buf[2]<<8)+buf[3];
-  *post_assert_delay  = (buf[4]<<8)+buf[5];
-  *pre_deassert_delay = (buf[6]<<8)+buf[7];
-}
-
-void cp2130_get_readonly_version(usbcom_t com, int *major, int *minor)
-{
-  unsigned char buf[2];
-  usbcom_control_msg(com, 0xC0, 0x11, 0, 0, buf, 2);
-  *major = buf[0];
-  *minor = buf[1];
-}
 
 /*
  *       Convenience
