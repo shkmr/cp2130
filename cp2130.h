@@ -7,7 +7,7 @@ enum { CP2130_WRBUFSIZ = 512 };
 typedef struct cp2130 *cp2130_t;
 
 cp2130_t cp2130_open(int vendor_id, int product_id);
-void cp2130_close(cp2130_t dev);
+void     cp2130_close(cp2130_t dev);
 
 /*
  *       Config
@@ -43,7 +43,7 @@ void cp2130_set_spi_delay(cp2130_t dev, int channel,
                           int pre_deassert_delay);
 
 /*
- *        OTP 
+ *        OTP
  */
 int  cp2130otp_get_lock_byte(cp2130_t dev);
 void cp2130otp_get_manufacturing_string(cp2130_t dev, void *str, unsigned size_of_str);
