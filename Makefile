@@ -25,7 +25,6 @@ check_cp2130 : test_cp2130
 test_cp2130 : cp2130.c $(USBCOM)
 	cc -o test_cp2130 -DCP2130_MAIN cp2130.c $(USBCOM) $(LIBS) -liconv
 
-
 fo_libusb01 : fo_libusb01.c
 	cc -o fo_libusb01 fo_libusb01.c -lusb
 
