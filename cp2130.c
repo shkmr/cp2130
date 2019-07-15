@@ -83,10 +83,10 @@ int cp2130_read(cp2130_t dev, void *buf, int len)
   cmd[1] = 0;
   cmd[2] = 0;
   cmd[3] = 0;
-  cmd[4] = ((len>>24)&0x00ff);
-  cmd[5] = ((len>>16)&0x00ff);
-  cmd[6] = ((len>>8)&0x00ff);
-  cmd[7] = ((len>>0)&0x00ff);
+  cmd[4] = ((len>>0)&0x00ff);
+  cmd[5] = ((len>>8)&0x00ff);
+  cmd[6] = ((len>>16)&0x00ff);
+  cmd[7] = ((len>>24)&0x00ff);
 
   usbcom_send(dev->com, dev->oep, cmd, 8);
   while (len > 0) {
@@ -106,10 +106,10 @@ int cp2130_write(cp2130_t dev, void *buf, int len)
   cmd[1] = 0;
   cmd[2] = 1;
   cmd[3] = 0;
-  cmd[4] = ((len>>24)&0x00ff);
-  cmd[5] = ((len>>16)&0x00ff);
-  cmd[6] = ((len>>8)&0x00ff);
-  cmd[7] = ((len>>0)&0x00ff);
+  cmd[4] = ((len>>0)&0x00ff);
+  cmd[5] = ((len>>8)&0x00ff);
+  cmd[6] = ((len>>16)&0x00ff);
+  cmd[7] = ((len>>24)&0x00ff);
 
   if (len <= 56) {
 
@@ -137,10 +137,10 @@ int cp2130_write_read(cp2130_t dev, void *buf, int len)
   dev->wrbuf[1] = 0;
   dev->wrbuf[2] = 2;
   dev->wrbuf[3] = 0;
-  dev->wrbuf[4] = ((len>>24)&0x00ff);
-  dev->wrbuf[5] = ((len>>16)&0x00ff);
-  dev->wrbuf[6] = ((len>>8)&0x00ff);
-  dev->wrbuf[7] = ((len>>0)&0x00ff);
+  dev->wrbuf[4] = ((len>>0)&0x00ff);
+  dev->wrbuf[5] = ((len>>8)&0x00ff);
+  dev->wrbuf[6] = ((len>>16)&0x00ff);
+  dev->wrbuf[7] = ((len>>24)&0x00ff);
 
   if (len <= dev->wrbufsiz - 8) {
 
