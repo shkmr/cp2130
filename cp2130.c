@@ -43,9 +43,19 @@ cp2130_t cp2130_open(int vendor_id, int product_id)
   if ((dev->wrbuf = (unsigned char *)malloc(default_wrbufsiz)) == NULL) err(1, NULL);
   dev->wrbufsiz = default_wrbufsiz;
   if ((dev->com = usbcom_open(vendor_id, product_id)) == NULL)  err(1, "cp2130: usb device open failed");
-  dev->oep = 1; /* default output endpoint */
-  dev->iep = 2; /* default input endpoint */
   dev->memory_key = 0;
+
+  {
+    unsigned char buf[9];
+    cp2130otp_get_usb_config(dev, buf);
+    if (buf[8] == 1) {
+      dev->oep = 1; /* 1: high priority write */
+      dev->iep = 2;
+    } else {
+      dev->oep = 2; /* 0: high priority read */
+      dev->iep = 1;
+    }
+  }
 
   return dev;
 }
