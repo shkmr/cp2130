@@ -16,6 +16,14 @@ cp2130_t cp2130_open(int vendor_id, int product_id);
 void     cp2130_close(cp2130_t dev);
 
 /*
+ *       Data transfer Commands
+ */
+
+int cp2130_read       (cp2130_t dev, void *buf, int len);
+int cp2130_write      (cp2130_t dev, void *buf, int len);
+int cp2130_write_read (cp2130_t dev, void *buf, int len);
+
+/*
  *       Config
  */
 int  cp2130_get_clock_divider(cp2130_t dev);

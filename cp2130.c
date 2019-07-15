@@ -23,6 +23,8 @@ struct cp2130 {
   usbcom_t       com;
   unsigned char *wrbuf;
   size_t         wrbufsiz;
+  int            oep;
+  int            iep;
   int            memory_key;
 };
 
@@ -41,6 +43,8 @@ cp2130_t cp2130_open(int vendor_id, int product_id)
   if ((dev->wrbuf = (unsigned char *)malloc(default_wrbufsiz)) == NULL) err(1, NULL);
   dev->wrbufsiz = default_wrbufsiz;
   if ((dev->com = usbcom_open(vendor_id, product_id)) == NULL)  err(1, "cp2130: usb device open failed");
+  dev->oep = 1; /* default output endpoint */
+  dev->iep = 2; /* default input endpoint */
   dev->memory_key = 0;
 
   return dev;
@@ -54,10 +58,110 @@ void cp2130_close(cp2130_t dev)
 
 /*
  *      API :
- *
- *      TODO :  Check parameter range and reject invalid parameter.
- *
  */
+
+/*
+ *       Data transfer Commands
+ */
+
+int cp2130_read(cp2130_t dev, void *buf, int len)
+{
+  int r;
+  unsigned char cmd[8];
+
+  cmd[0] = 0;
+  cmd[1] = 0;
+  cmd[2] = 0;
+  cmd[3] = 0;
+  cmd[4] = ((len>>24)&0x00ff);
+  cmd[5] = ((len>>16)&0x00ff);
+  cmd[6] = ((len>>8)&0x00ff);
+  cmd[7] = ((len>>0)&0x00ff);
+
+  usbcom_send(dev->com, dev->oep, cmd, 8);
+  while (len > 0) {
+    r = usbcom_receive(dev->com, dev->iep, buf, len);
+    if (r == 0) break;
+    len = len - r;
+    buf = buf + r;
+  }
+  return len;
+}
+
+int cp2130_write(cp2130_t dev, void *buf, int len)
+{
+  unsigned char cmd[64];
+
+  cmd[0] = 0;
+  cmd[1] = 0;
+  cmd[2] = 1;
+  cmd[3] = 0;
+  cmd[4] = ((len>>24)&0x00ff);
+  cmd[5] = ((len>>16)&0x00ff);
+  cmd[6] = ((len>>8)&0x00ff);
+  cmd[7] = ((len>>0)&0x00ff);
+
+  if (len <= 56) {
+
+    memcpy(cmd+8, buf, len);
+    usbcom_send(dev->com, dev->oep, cmd, len+8);
+
+  } else {
+
+    memcpy(cmd+8, buf, 56);
+    usbcom_send(dev->com, dev->oep, cmd, 64);
+    buf = buf + 56;
+    len = len - 56;
+    usbcom_send(dev->com, dev->oep, buf, len);
+
+  }
+
+  return 0;
+}
+
+int cp2130_write_read(cp2130_t dev, void *buf, int len)
+{
+  int r;
+
+  dev->wrbuf[0] = 0;
+  dev->wrbuf[1] = 0;
+  dev->wrbuf[2] = 2;
+  dev->wrbuf[3] = 0;
+  dev->wrbuf[4] = ((len>>24)&0x00ff);
+  dev->wrbuf[5] = ((len>>16)&0x00ff);
+  dev->wrbuf[6] = ((len>>8)&0x00ff);
+  dev->wrbuf[7] = ((len>>0)&0x00ff);
+
+  if (len <= dev->wrbufsiz - 8) {
+
+    memcpy(dev->wrbuf+8, buf, len);
+    usbcom_send(dev->com, dev->oep, dev->wrbuf , len + 8);
+    usbcom_receive(dev->com, dev->iep, buf, len);
+
+  } else {
+
+    memcpy(dev->wrbuf+8, buf, dev->wrbufsiz - 8);
+    usbcom_send(dev->com, dev->oep, dev->wrbuf, dev->wrbufsiz);
+    usbcom_receive(dev->com, dev->iep, buf, dev->wrbufsiz - 8);
+    buf = buf + (dev->wrbufsiz - 8);
+    len = len - (dev->wrbufsiz - 8);
+
+    while (len > dev->wrbufsiz) {
+
+      usbcom_send(dev->com, dev->oep, buf, dev->wrbufsiz);
+      r = usbcom_receive(dev->com, dev->iep, buf, dev->wrbufsiz);
+      if (r != dev->wrbufsiz) err(1, "cp2130_write_read buffer error");
+      buf = buf + dev->wrbufsiz;
+      len = len - dev->wrbufsiz;
+
+    }
+    usbcom_send(dev->com, dev->oep, buf, len);
+    usbcom_receive(dev->com, dev->iep, buf, len);
+
+  }
+  return 0;
+}
+
 
 /*
  *       RequestType = 0xc0,   Device-to-Host, Vendor, Device
