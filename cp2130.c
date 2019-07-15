@@ -172,7 +172,6 @@ int cp2130_write_read(cp2130_t dev, void *buf, int len)
   return 0;
 }
 
-
 /*
  *       RequestType = 0xc0,   Device-to-Host, Vendor, Device
  */
