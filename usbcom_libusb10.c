@@ -83,7 +83,7 @@ int usbcom_send(usbcom_t com, int pipe, void *buf, int len)
 int usbcom_receive(usbcom_t com, int pipe, void *buf, int max_len)
 {
   int    r, actual_length;
-  r = libusb_bulk_transfer(com->dev, pipe, buf, max_len, &actual_length, timeout);
+  r = libusb_bulk_transfer(com->dev, pipe|0x80, buf, max_len, &actual_length, timeout);
   if (debug) fprintf(stderr, "usbcom: max_len=%d r=%d\n", max_len, r);
   return actual_length;
 }
