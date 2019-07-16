@@ -94,7 +94,7 @@ int main(int c, char *v[])
 
   printf("cp2130 main\n");
 
-  ek  = cp2130_open(0x10c4, 0x87a0)
+  ek  = cp2130_open(0x10c4, 0x87a0);
 
   ek_init(ek);
 
