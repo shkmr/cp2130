@@ -8,6 +8,14 @@
  *
  *      https://www.silabs.com/documents/public/data-sheets/Si8900-1-2.pdf
  *
+ *      Serial EEPROM  25AA02E48-I/SN
+ *
+ *      http://ww1.microchip.com/downloads/en/DeviceDoc/20002123F.pdf
+ *
+ *      Temp Sensor   MPC9701AT-E/OT
+ *
+ *      http://ww1.microchip.com/downloads/en/devicedoc/20001942g.pdf
+ *
  *                                       written by skimu@me.com
  */
 
