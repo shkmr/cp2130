@@ -43,4 +43,4 @@ usbcom_libusb01.o : usbcom_libusb01.c usbcom.h
 usbcom_libusb10.o : usbcom_libusb10.c usbcom.h
 
 clean:
-	-rm -f libusbcom.a *.o *~ fo_libusb01 listdevs test_cp2130
+	-rm -f libusbcom.a *.o *~ fo_libusb01 listdevs test_cp2130 test_cp2130ek
