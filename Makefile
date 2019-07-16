@@ -21,19 +21,23 @@ LIBS=-lusb
 
 ##
 
-all : test_cp2130
+all : test_cp2130 test_cp2130ek
 
 check_cp2130 : test_cp2130
 	./test_cp2130
 
-test_cp2130 : cp2130.c $(USBCOM)
-	cc -o test_cp2130 -DCP2130_MAIN cp2130.c $(USBCOM) $(LIBS) -liconv
+test_cp2130ek : test_cp2130ek.o cp2130.o
+	cc -o test_cp2130ek test_cp2130ek.o cp2130.o print_dev_info.o $(USBCOM) $(LIBS) -liconv
+
+test_cp2130 : cp2130.c  print_dev_info.o $(USBCOM)
+	cc -o test_cp2130 -DCP2130_MAIN cp2130.c print_dev_info.o $(USBCOM) $(LIBS) -liconv
 
 libusbcom.a : $(USBCOM)
 	ar cru libusbcom.a $(USBCOM)
 	ranlib libusbcom.a
 
 cp2130.o : cp2130.c
+print_dev_info.o : print_dev_info.c
 usbcom_mac.o      : usbcom_mac.c      usbcom.h
 usbcom_libusb01.o : usbcom_libusb01.c usbcom.h
 usbcom_libusb10.o : usbcom_libusb10.c usbcom.h
