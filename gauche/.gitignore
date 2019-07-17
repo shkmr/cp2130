@@ -3,3 +3,4 @@ config.log
 test.log
 cp2130.gpd
 cp2130.so
+Makefile
