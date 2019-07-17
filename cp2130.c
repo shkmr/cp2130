@@ -35,6 +35,13 @@ void cp2130_set_default_wrbufsiz(size_t bufsiz)
   default_wrbufsiz = bufsiz;
 }
 
+void cp2130_set_wrbufsiz(cp2130_t dev, size_t newsize)
+{
+  free(dev->wrbuf);
+  if ((dev->wrbuf = (unsigned char *)malloc(newsize)) == NULL) err(1, NULL);
+  dev->wrbufsiz = newsize;
+}
+
 cp2130_t cp2130_open(int vendor_id, int product_id)
 {
   cp2130_t dev;
