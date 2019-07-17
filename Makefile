@@ -32,6 +32,10 @@ test_cp2130ek : test_cp2130ek.o cp2130.o
 test_cp2130 : cp2130.c  print_dev_info.o $(USBCOM)
 	cc -o test_cp2130 -DCP2130_MAIN cp2130.c print_dev_info.o $(USBCOM) $(LIBS) -liconv
 
+libcp2130.a : $(USBCOM) cp2130.o
+	ar cru libcp2130.a $(USBCOM) cp2130.o
+	ranlib libcp2130.a
+
 libusbcom.a : $(USBCOM)
 	ar cru libusbcom.a $(USBCOM)
 	ranlib libusbcom.a
