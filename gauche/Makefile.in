@@ -45,7 +45,7 @@ all : $(TARGET)
 cp2130.$(SOEXT): $(cp2130_SRCS)
 	$(GAUCHE_PACKAGE) compile \
 	  --libs="../libcp2130.a -lusb" \
-	  --local=$(LOCAL_PATHS) --verbose cp2130 $(cp2130_SRCS) 
+	  --local=$(LOCAL_PATHS) --verbose cp2130 $(cp2130_SRCS)
 
 check : all
 	@rm -f test.log
@@ -72,4 +72,3 @@ distclean : clean
 
 maintainer-clean : clean
 	rm -rf $(CONFIG_GENERATED)  VERSION
-
