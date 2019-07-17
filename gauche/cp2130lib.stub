@@ -19,6 +19,20 @@
               ::<void>
   (cp2130_close dev))
 
+(define-cproc cp2130-read (dev::<cp2130> buf::<u8vector> len::<int>)
+              ::<int>
+  (if (or (< len 0)
+          (> len (SCM_UVECTOR_SIZE buf)))
+    (return (cp2130_read dev (SCM_UVECTOR_ELEMENTS buf) (SCM_UVECTOR_SIZE buf)))
+    (return (cp2130_read dev (SCM_UVECTOR_ELEMENTS buf) len))))
+
+(define-cproc cp2130-write (dev::<cp2130> buf::<u8vector> len::<int>)
+              ::<int>
+  (if (or (< len 0)
+          (> len (SCM_UVECTOR_SIZE buf)))
+    (return (cp2130_write dev (SCM_UVECTOR_ELEMENTS buf) (SCM_UVECTOR_SIZE buf)))
+    (return (cp2130_write dev (SCM_UVECTOR_ELEMENTS buf) len))))
+
 (define-cproc cp2130-set-gpio07   (dev::<cp2130>) ::<void> (cp2130_set_gpio07 dev))
 (define-cproc cp2130-reset-gpio07 (dev::<cp2130>) ::<void> (cp2130_reset_gpio07 dev))
 
