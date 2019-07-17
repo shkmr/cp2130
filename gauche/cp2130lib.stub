@@ -1,0 +1,35 @@
+;;;
+;;; cp2130lib.stub
+;;;
+
+"
+#include \"cp2130.h\"
+"
+(define-cptr <cp2130> :private "cp2130_t"
+  "SCM_CP2130Class"
+  "SCM_IS_CP2130"
+  "SCM_BOX_CP2130"
+  "SCM_UNBOX_CP2130")
+
+(define-cproc cp2130-open (vendor::<int> product::<int>)
+              ::<cp2130>
+  (return (cp2130_open vendor product)))
+
+(define-cproc cp2130-close (dev::<cp2130>)
+              ::<void>
+  (cp2130_close dev))
+
+(define-cproc cp2130-set-gpio07   (dev::<cp2130>) ::<void> (cp2130_set_gpio07 dev))
+(define-cproc cp2130-reset-gpio07 (dev::<cp2130>) ::<void> (cp2130_reset_gpio07 dev))
+
+
+;; The following entry is a dummy one.
+;; Replace it for your definitions.
+
+(define-cproc test-cp2130 () ::<const-cstring>
+  (result "cp2130 is working"))
+
+
+;; Local variables:
+;; mode: scheme
+;; end:
