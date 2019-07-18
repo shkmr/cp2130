@@ -1,4 +1,5 @@
 *.o
 *.a
 test_cp2130*
+libcp2130-config
 
