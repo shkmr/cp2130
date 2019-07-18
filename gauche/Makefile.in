@@ -40,11 +40,14 @@ GAUCHE_PKGARCHDIR = "$(DESTDIR)@GAUCHE_PKGARCHDIR@"
 
 cp2130_SRCS = $(srcdir)/cp2130.c $(srcdir)/cp2130lib.stub
 
+LIBS=@LIBS@
+
+
 all : $(TARGET)
 
 cp2130.$(SOEXT): $(cp2130_SRCS)
 	$(GAUCHE_PACKAGE) compile \
-	  --libs="../libcp2130.a -lusb" \
+	  --libs="../libcp2130.a $(LIBS)" \
 	  --local=$(LOCAL_PATHS) --verbose cp2130 $(cp2130_SRCS)
 
 check : all

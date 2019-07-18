@@ -3,6 +3,7 @@
 ;; Run ./configure (or gosh ./configure) to generate Makefiles.
 
 (use gauche.configure)
+(use gauche.process)
 
 ;; Here you can define handlers of configure arguments by cf-arg-enable
 ;; and cf-arg-with.  Note that --with-local is handled implicitly if you use
@@ -14,6 +15,7 @@
 (cf-init-gauche-extension)
 
 ;; Here you can add feature tests and other cf-define's.
+(cf-subst 'LIBS (process-output->string "../libcp2130-config libs"))
 
 ;; Output
 (cf-output-default)
