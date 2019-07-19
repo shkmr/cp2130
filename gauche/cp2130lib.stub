@@ -19,6 +19,8 @@
               ::<void>
   (cp2130_close dev))
 
+;;
+;;
 (define-cproc cp2130-read (dev::<cp2130> buf::<u8vector> len::<int>)
               ::<int>
   (if (or (< len 0)
@@ -33,6 +35,88 @@
     (return (cp2130_write dev (SCM_UVECTOR_ELEMENTS buf) (SCM_UVECTOR_SIZE buf)))
     (return (cp2130_write dev (SCM_UVECTOR_ELEMENTS buf) len))))
 
+(define-cproc cp2130-write-read (dev::<cp2130> buf::<u8vector> len::<int>)
+              ::<int>
+  (if (or (< len 0)
+          (> len (SCM_UVECTOR_SIZE buf)))
+    (return (cp2130_write_read dev (SCM_UVECTOR_ELEMENTS buf) (SCM_UVECTOR_SIZE buf)))
+    (return (cp2130_write_read dev (SCM_UVECTOR_ELEMENTS buf) len))))
+
+;;
+;;
+(define-cproc cp2130-get-clock-divider (dev::<cp2130>)
+              ::<int>
+  (return (cp2130_get_clock_divider dev)))
+
+(define-cproc cp2130-get-event-counter (dev::<cp2130>)
+              ::(<int> <int>)
+  (let* ((mode  :: int)
+         (count :: int))
+    (cp2130_get_event_counter dev (& mode) (& count))
+    (return mode count)))
+
+(define-cproc cp2130-get-full-threshold (dev::<cp2130>)
+              ::<int>
+  (return (cp2130_get_full_threshold dev)))
+
+(define-cproc cp2130-get-gpio-chip-select (dev::<cp2130>)
+              ::(<int> <int>)
+  (let* ((ch  :: int)
+         (pin :: int))
+    (cp2130_get_gpio_chip_select dev (& ch) (& pin))
+    (return ch pin)))
+
+(define-cproc cp2130-get-gpio-mode-and-level (dev::<cp2130>)
+              ::(<int> <int>)
+  (let* ((mode  :: int)
+         (level :: int))
+    (cp2130_get_gpio_mode_and_level dev (& mode) (& level))
+    (return mode level)))
+
+(define-cproc cp2130-get-gpio-values (dev::<cp2130>)
+              ::<int>
+  (return (cp2130_get_gpio_values dev)))
+
+(define-cproc cp2130-get-rtr-state (dev::<cp2130>)
+              ::<int>
+  (return (cp2130_get_rtr_state dev)))
+
+(define-cproc cp2130-get-spi-word (dev::<cp2130> buf::<u8vector>)
+              ::<void>
+  (if (>= (SCM_UVECTOR_SIZE buf) 11)
+    (cp2130_get_spi_word dev (SCM_UVECTOR_ELEMENTS buf))))
+
+
+;;; XXX  Somewhat gets error.
+
+#;(define-cproc cp2130-get-spi-delay (dev::<cp2130> channel::<int>)
+              ::(<int> <int> <int> <int>)
+  (let* ((mask               :: int)
+         (inter_byte_delay   :: int)
+         (post_assert_delay  :: int)
+         (pre_deassert_delay :: int))
+    (cp2130_get_spi_delay dev channel
+                          (& mask)
+                          (& inter_byte_delay)
+                          (& post_assert_delay)
+                          (& pre_deassert_delay))
+    (return mask
+            inter_byte_delay
+            post_assert_delay
+            pre_deasset_delay)))
+
+(define-cproc cp2130-get-readonly-version (dev::<cp2130>)
+              ::(<int> <int>)
+  (let* ((major :: int)
+         (minor :: int))
+    (cp2130_get_readonly_version dev (& major) (& minor))
+    (return major minor)))
+
+;;
+;;
+
+;;
+;;
 (define-cproc cp2130-get-event-counter-count (dev::<cp2130>) ::<int> (return (cp2130_get_event_counter_count dev)))
 (define-cproc cp2130-get-event-counter-mode  (dev::<cp2130>) ::<int> (return (cp2130_get_event_counter_mode  dev)))
 
