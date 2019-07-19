@@ -87,8 +87,6 @@
     (cp2130_get_spi_word dev (SCM_UVECTOR_ELEMENTS buf))))
 
 
-;;; XXX  Somewhat gets error.
-
 #;(define-cproc cp2130-get-spi-delay (dev::<cp2130> channel::<int>)
               ::(<int> <int> <int> <int>)
   (let* ((mask               :: int)
