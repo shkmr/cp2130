@@ -193,7 +193,6 @@
 (define-cproc cp2130-reset-gpio09 (dev::<cp2130>) ::<void> (cp2130_reset_gpio09 dev))
 (define-cproc cp2130-reset-gpio10 (dev::<cp2130>) ::<void> (cp2130_reset_gpio10 dev))
 
-
 ;; The following entry is a dummy one.
 ;; Replace it for your definitions.
 
