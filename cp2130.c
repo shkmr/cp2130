@@ -251,7 +251,7 @@ void cp2130_get_spi_delay(cp2130_t dev, int channel,
   unsigned char buf[8];
   usbcom_control_msg(dev->com, 0xc0, 0x32, 0, channel, buf, 8);
   if (channel != buf[0])
-    warnx("cp2130_get_spi_delay ch conflict given %d, but get %d", channel, buf[0]);
+    warnx("cp2130_get_spi_delay: ch conflict given %d, but get %d", channel, buf[0]);
   *mask  = buf[1];
   *inter_byte_delay   = (buf[2]<<8)+buf[3];
   *post_assert_delay  = (buf[4]<<8)+buf[5];
