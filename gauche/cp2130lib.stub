@@ -117,37 +117,37 @@
               ::<int>
   (return (cp2130otp_get_lock_byte dev)))
 
-(define-cproc cp2130otp-get-manufacturing-string (dev::<cp2130> buf::<u8vector>)
+(define-cproc cp2130otp-get-manufacturing-string& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (cp2130otp_get_manufacturing-string dev
                                       (SCM_UVECTOR_ELEMENTS buf)
                                       (SCM_UVECTOR_SIZE buf)))
 
-(define-cproc cp2130otp-get-pin-config (dev::<cp2130> buf::<u8vector>)
+(define-cproc cp2130otp-get-pin-config& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (if (>= (SCM_UVECTOR_SIZE buf) 20)
     (cp2130otp_get_pin_config dev (SCM_UVECTOR_ELEMENTS buf))))
 
-(define-cproc cp2130otp-get-product-string (dev::<cp2130> buf::<u8vector>)
+(define-cproc cp2130otp-get-product-string& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (cp2130otp_get_product_string dev
                                 (SCM_UVECTOR_ELEMENTS buf)
                                 (SCM_UVECTOR_SIZE buf)))
 
-(define-cproc cp2130otp-get-prom-config (dev::<cp2130> index::<int> buf::<u8vector>)
+(define-cproc cp2130otp-get-prom-config& (dev::<cp2130> index::<int> buf::<u8vector>)
               ::<void>
   (if (and (>= (SCM_UVECTOR_SIZE buf) 64)
            (>= index 0)
            (<= index 10))
     (cp2130otp_get_prom_config dev index (SCM_UVECTOR_ELEMENTS buf))))
 
-(define-cproc cp2130otp-get-serial-string (dev::<cp2130> buf::<u8vector>)
+(define-cproc cp2130otp-get-serial-string& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (cp2130otp_get_serial_string dev
                                (SCM_UVECTOR_ELEMENTS buf)
                                (SCM_UVECTOR_SIZE buf)))
 
-(define-cproc cp2130otp-get-usb-config (dev::<cp2130> buf::<u8vector>)
+(define-cproc cp2130otp-get-usb-config& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (if (>= (SCM_UVECTOR_SIZE buf) 9)
     (cp2130otp_get_usb_config dev (SCM_UVECTOR_ELEMENTS buf))))
@@ -192,13 +192,6 @@
 (define-cproc cp2130-reset-gpio08 (dev::<cp2130>) ::<void> (cp2130_reset_gpio08 dev))
 (define-cproc cp2130-reset-gpio09 (dev::<cp2130>) ::<void> (cp2130_reset_gpio09 dev))
 (define-cproc cp2130-reset-gpio10 (dev::<cp2130>) ::<void> (cp2130_reset_gpio10 dev))
-
-;; The following entry is a dummy one.
-;; Replace it for your definitions.
-
-(define-cproc test-cp2130 () ::<const-cstring>
-  (result "cp2130 is working"))
-
 
 ;; Local variables:
 ;; mode: scheme
