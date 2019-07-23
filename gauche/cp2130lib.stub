@@ -20,6 +20,7 @@
   (cp2130_close dev))
 
 ;;
+;;     Data transfer
 ;;
 (define-cproc cp2130-read (dev::<cp2130> buf::<u8vector> len::<int>)
               ::<int>
@@ -43,6 +44,7 @@
     (return (cp2130_write_read dev (SCM_UVECTOR_ELEMENTS buf) len))))
 
 ;;
+;;      Device-to-Host
 ;;
 (define-cproc cp2130-get-clock-divider (dev::<cp2130>)
               ::<int>
@@ -84,7 +86,8 @@
 (define-cproc cp2130-get-spi-word (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (if (>= (SCM_UVECTOR_SIZE buf) 11)
-    (cp2130_get_spi_word dev (SCM_UVECTOR_ELEMENTS buf))))
+    (cp2130_get_spi_word dev (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
 
 
 #;(define-cproc cp2130-get-spi-delay (dev::<cp2130> channel::<int>)
@@ -111,22 +114,29 @@
     (return major minor)))
 
 ;;
-;;  OPT
+;;      Host-to-Device
 ;;
+
+
+;;
+;;  OPT ROM Configuration Commands.  Device-to-Host
+;;
+
 (define-cproc cp2130otp-get-lock-byte (dev::<cp2130>)
               ::<int>
   (return (cp2130otp_get_lock_byte dev)))
 
 (define-cproc cp2130otp-get-manufacturing-string& (dev::<cp2130> buf::<u8vector>)
               ::<void>
-  (cp2130otp_get_manufacturing-string dev
+  (cp2130otp_get_manufacturing_string dev
                                       (SCM_UVECTOR_ELEMENTS buf)
                                       (SCM_UVECTOR_SIZE buf)))
 
 (define-cproc cp2130otp-get-pin-config& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (if (>= (SCM_UVECTOR_SIZE buf) 20)
-    (cp2130otp_get_pin_config dev (SCM_UVECTOR_ELEMENTS buf))))
+    (cp2130otp_get_pin_config dev (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
 
 (define-cproc cp2130otp-get-product-string& (dev::<cp2130> buf::<u8vector>)
               ::<void>
@@ -139,7 +149,8 @@
   (if (and (>= (SCM_UVECTOR_SIZE buf) 64)
            (>= index 0)
            (<= index 10))
-    (cp2130otp_get_prom_config dev index (SCM_UVECTOR_ELEMENTS buf))))
+    (cp2130otp_get_prom_config dev index (SCM_UVECTOR_ELEMENTS buf))
+    (error "wrong parameter")))
 
 (define-cproc cp2130otp-get-serial-string& (dev::<cp2130> buf::<u8vector>)
               ::<void>
@@ -150,9 +161,61 @@
 (define-cproc cp2130otp-get-usb-config& (dev::<cp2130> buf::<u8vector>)
               ::<void>
   (if (>= (SCM_UVECTOR_SIZE buf) 9)
-    (cp2130otp_get_usb_config dev (SCM_UVECTOR_ELEMENTS buf))))
+    (cp2130otp_get_usb_config dev (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
 
 ;;
+;;  OPT ROM Configuration Commands.  Host-to-Device.
+;;
+
+(define-cproc c2130otp-set-memory-key (dev::<cp2130> key::<int>)
+              ::<void>
+  (cp2130otp_set_memory_key dev key))
+
+(define-cproc cp2130otp-set-lock-byte& (dev::<cp2130> buf::<u8vector>)
+              ::<void>
+  (if (>= (SCM_UVECTOR_SIZE buf) 2)
+    (cp2130otp_set_lock_byte dev (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
+
+(define-cproc cp2130otp-set-manufacturing-string& (dev::<cp2130> utf16::<u8vector>)
+              ::<void>
+  (cp2130otp_set_manufacturing-string dev
+                                      (SCM_UVECTOR_ELEMENTS utf16)
+                                      (SCM_UVECTOR_SIZE utf16)))
+
+(define-cproc cp2130otp-set-pin-config& (dev::<cp2130> buf::<u8vector>)
+              ::<void>
+  (if (>= (SCM_UVECTOR_SIZE buf) 20)
+    (cp2130otp_set_pin_config dev (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
+
+(define-cproc cp2130otp-set-product-string& (dev::<cp2130> utf16::<u8vector>)
+              ::<void>
+  (cp2130otp_set_product-string dev
+                                (SCM_UVECTOR_ELEMENTS utf16)
+                                (SCM_UVECTOR_SIZE utf16)))
+
+(define-cproc cp2130otp-set-prom-config& (dev::<cp2130> index::<int> buf::<u8vector>)
+              ::<void>
+  (if (>= (SCM_UVECTOR_SIZE buf) 64)
+    (cp2130otp_set_prom_config dev index (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
+
+(define-cproc cp2130otp-set-serial-string& (dev::<cp2130> utf16::<u8vector>)
+              ::<void>
+  (cp2130otp_set_serial-string dev
+                               (SCM_UVECTOR_ELEMENTS utf16)
+                               (SCM_UVECTOR_SIZE utf16)))
+
+(define-cproc cp2130otp-set-usb-config& (dev::<cp2130> buf::<u8vector>)
+              ::<void>
+  (if (>= (SCM_UVECTOR_SIZE buf) 10)
+    (cp2130otp_set_usb_config dev (SCM_UVECTOR_ELEMENTS buf))
+    (error "buffer size too small")))
+
+;;
+;;       Convenience
 ;;
 (define-cproc cp2130-get-event-counter-count (dev::<cp2130>) ::<int> (return (cp2130_get_event_counter_count dev)))
 (define-cproc cp2130-get-event-counter-mode  (dev::<cp2130>) ::<int> (return (cp2130_get_event_counter_mode  dev)))
