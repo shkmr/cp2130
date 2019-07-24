@@ -72,6 +72,7 @@
     (print #`"Serial: \",(cp2130otp-get-serial-string dev)\""))
 
 (define (main args)
+
   (let ((ek (cp2130-open #x10c4 #x87a0)))
 
     (define (loop)
