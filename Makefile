@@ -1,23 +1,28 @@
 ###
 ###    macOS
 ###
-#CFLAGS = -DMacOSX
+#CFLAGS = -DMacOSX -fPIC
 #USBCOM = usbcom_mac.o
 #LIBS=-framework CoreFoundation -framework IOKit
+ICONV=-liconv
 
 ###
 ###    libusb-0.1
 ###
-CFLAGS = -DLIBUSB01
+CFLAGS = -DLIBUSB01 -fPIC
 USBCOM = usbcom_libusb01.o
 LIBS=-lusb
+#ICONV=
+ICONV=-liconv
+
 
 ###
 ###    libusb-1.0   -- some what does not work.  Need to fix.
 ###
-#CFLAGS = -DLIBUSB10
+#CFLAGS = -DLIBUSB10 -fPIC
 #USBCOM = usbcom_libusb10.o
 #LIBS=-lusb-1.0
+#ICONV=
 
 ##
 #
@@ -31,10 +36,10 @@ check_cp2130 : test_cp2130
 	./test_cp2130
 
 test_cp2130ek : test_cp2130ek.o cp2130.o
-	cc -o test_cp2130ek test_cp2130ek.o cp2130.o print_dev_info.o $(USBCOM) $(LIBS) -liconv
+	cc -o test_cp2130ek test_cp2130ek.o cp2130.o print_dev_info.o $(USBCOM) $(LIBS) $(ICONV)
 
 test_cp2130 : cp2130.c  print_dev_info.o $(USBCOM)
-	cc -o test_cp2130 -DCP2130_MAIN cp2130.c print_dev_info.o $(USBCOM) $(LIBS) -liconv
+	cc -o test_cp2130 -DCP2130_MAIN cp2130.c print_dev_info.o $(USBCOM) $(LIBS) $(ICONV)
 
 libcp2130.a : $(USBCOM) cp2130.o
 	rm -f  libcp2130.a
