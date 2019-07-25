@@ -110,7 +110,7 @@ int main(int c, char *v[])
 
   while (1) {
     print_bar(ek_read_adc(ek, 0));
-    usleep(100000);
+    usleep(50000);
   }
 
   printf("bye\n");
