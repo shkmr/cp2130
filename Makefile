@@ -4,7 +4,7 @@
 #CFLAGS = -DMacOSX -fPIC
 #USBCOM = usbcom_mac.o
 #LIBS=-framework CoreFoundation -framework IOKit
-ICONV=-liconv
+#ICONV=-liconv
 
 ###
 ###    libusb-0.1
