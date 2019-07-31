@@ -9,7 +9,8 @@
   "SCM_CP2130Class"
   "SCM_IS_CP2130"
   "SCM_BOX_CP2130"
-  "SCM_UNBOX_CP2130")
+  "SCM_UNBOX_CP2130"
+  (flags :map-null))
 
 (define-cproc cp2130-open (vendor::<int> product::<int>)
               ::<cp2130>
