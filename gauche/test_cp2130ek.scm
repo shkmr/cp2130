@@ -94,11 +94,12 @@
       (sys-nanosleep (/ 0.05 1e-9))
       (loop))
 
-    (ek-init ek)
-    (print-dev-info ek)
-
-    (loop)
-
-    0))
+    (if (not ek)
+      (error "cp2130-open failed")
+      (begin
+        (ek-init ek)
+        (print-dev-info ek)
+        (loop)
+        0))))
 
 ;; EOF
