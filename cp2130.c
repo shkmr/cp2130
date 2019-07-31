@@ -37,8 +37,7 @@ void cp2130_set_default_wrbufsiz(size_t bufsiz)
 
 void cp2130_set_wrbufsiz(cp2130_t dev, size_t newsize)
 {
-  free(dev->wrbuf);
-  if ((dev->wrbuf = (unsigned char *)malloc(newsize)) == NULL) err(1, NULL);
+  if ((dev->wrbuf = (unsigned char *)realloc(dev->wrbuf, newsize)) == NULL) err(1, NULL);
   dev->wrbufsiz = newsize;
 }
 
@@ -49,7 +48,13 @@ cp2130_t cp2130_open(int vendor_id, int product_id)
   if ((dev = (cp2130_t)malloc(sizeof(struct cp2130)))  == NULL) err(1, NULL);
   if ((dev->wrbuf = (unsigned char *)malloc(default_wrbufsiz)) == NULL) err(1, NULL);
   dev->wrbufsiz = default_wrbufsiz;
-  if ((dev->com = usbcom_open(vendor_id, product_id)) == NULL)  err(1, "cp2130: usb device open failed");
+
+  if ((dev->com = usbcom_open(vendor_id, product_id)) == NULL) {
+    free(dev->wrbuf);
+    free(dev);
+    return NULL;
+  }
+
   dev->memory_key = 0;
 
   {
@@ -645,7 +650,10 @@ int main(int c, char *v[])
   vendor  = 0x10c4;
   product = 0x87a0;
 
-  dev = cp2130_open(vendor, product);
+  if ((dev = cp2130_open(vendor, product)) == NULL) {
+    fprintf(stderr, "cp2130 open failed\n");
+    return 1;
+  }
 
   print_dev_info(dev);
 
