@@ -102,7 +102,10 @@ int main(int c, char *v[])
 
   printf("cp2130 main\n");
 
-  ek  = cp2130_open(0x10c4, 0x87a0);
+  if ((ek = cp2130_open(0x10c4, 0x87a0)) == NULL) {
+    fprintf(stderr, "cp2130 open failed\n");
+    return 1;
+  }
 
   ek_init(ek);
 
