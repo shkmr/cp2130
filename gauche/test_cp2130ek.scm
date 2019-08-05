@@ -70,10 +70,10 @@
 
 (define (print-dev-info dev)
   (receive (major minor) (cp2130-get-readonly-version dev)
-    (print #`"cp2130 version ,|major|.,|minor|"))
-    (print #`"Manufacturer: \",(cp2130otp-get-manufacturing-string dev)\"")
-    (print #`"Product: \",(cp2130otp-get-product-string dev)\"")
-    (print #`"Serial: \",(cp2130otp-get-serial-string dev)\"")
+    (print #"cp2130 version ~|major|.~|minor|"))
+    (print #"Manufacturer: \"~(cp2130otp-get-manufacturing-string dev)\"")
+    (print #"Product: \"~(cp2130otp-get-product-string dev)\"")
+    (print #"Serial: \"~(cp2130otp-get-serial-string dev)\"")
     (let ((cnf (cp2130otp-get-usb-config dev)))
       (format #t "VID/PID: #x~4,'0x/#x~4,'0x~%"
               (cadr (assq 'VID cnf))
