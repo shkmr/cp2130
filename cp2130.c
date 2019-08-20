@@ -41,6 +41,11 @@ void cp2130_set_wrbufsiz(cp2130_t dev, size_t newsize)
   dev->wrbufsiz = newsize;
 }
 
+size_t cp2130_wrbufsiz(cp2130_t dev)
+{
+  return dev->wrbufsiz;
+}
+
 cp2130_t cp2130_open(int vendor_id, int product_id)
 {
   cp2130_t dev;
@@ -159,7 +164,9 @@ int cp2130_write_read(cp2130_t dev, void *buf, int len)
 
     memcpy(dev->wrbuf+8, buf, len);
     usbcom_send(dev->com, dev->oep, dev->wrbuf , len + 8);
-    usbcom_receive(dev->com, dev->iep, buf, len);
+    r = usbcom_receive(dev->com, dev->iep, buf, len);
+    if (r != len)
+      errx(1, "cp2130_write_read: received size (%d) does not match with the expected (%d).", r, len);
 
   } else {
 
@@ -173,13 +180,17 @@ int cp2130_write_read(cp2130_t dev, void *buf, int len)
 
       usbcom_send(dev->com, dev->oep, buf, dev->wrbufsiz);
       r = usbcom_receive(dev->com, dev->iep, buf, dev->wrbufsiz);
-      if (r != dev->wrbufsiz) err(1, "cp2130_write_read buffer error");
+      if (r != dev->wrbufsiz)
+        errx(1, "cp2130_write_read: received size (%d) does not match with the expected (%zu).", r, dev->wrbufsiz);
+
       buf = buf + dev->wrbufsiz;
       len = len - dev->wrbufsiz;
 
     }
     usbcom_send(dev->com, dev->oep, buf, len);
-    usbcom_receive(dev->com, dev->iep, buf, len);
+    r = usbcom_receive(dev->com, dev->iep, buf, len);
+    if (r != len)
+      errx(1, "cp2130_write_read: received size (%d) does not match with the expected (%d).", r, len);
 
   }
   return 0;
