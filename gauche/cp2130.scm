@@ -46,14 +46,14 @@
                   ((0) 'high-priority-read)
                   ((1) 'high-priority-write))))))
 
-(define (cp2130otp-set-manufacturing-string dev utf8string)
-  (cp2130otp-set-manufacturing-string& dev (ces-convert-to <u8vector> utf8string 'utf-8 'utf-16le)))
+(define (cp2130otp-set-manufacturing-string dev str)
+  (cp2130otp-set-manufacturing-string& dev (ces-convert-to <u8vector> str (gauche-character-encoding) 'utf-16le)))
 
-(define (cp2130otp-set-product-string dev utf8string)
-  (cp2130otp-set-product-string& dev (ces-convert-to <u8vector> utf8string 'utf-8 'utf-16le)))
+(define (cp2130otp-set-product-string dev str)
+  (cp2130otp-set-product-string& dev (ces-convert-to <u8vector> str (gauche-character-encoding) 'utf-16le)))
 
-(define (cp2130otp-set-serial-string dev utf8string)
-  (cp2130otp-set-serial-string& dev (ces-convert-to <u8vector> utf8string 'utf-8 'utf-16le)))
+(define (cp2130otp-set-serial-string dev str)
+  (cp2130otp-set-serial-string& dev (ces-convert-to <u8vector> str '(gauche-character-encoding) 'utf-16le)))
 
 ;; EOF
 
