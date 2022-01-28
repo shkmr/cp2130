@@ -656,6 +656,9 @@ int main(int c, char *v[])
   int vendor, product, n;
   cp2130_t dev;
 
+  //usbcom_set_debug_level(0x01);
+  usbcom_set_debug_level(0x11);
+
   printf("cp2130 main\n");
 
   vendor  = 0x10c4;

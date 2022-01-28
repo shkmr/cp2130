@@ -100,6 +100,9 @@ int main(int c, char *v[])
   void print_dev_info(cp2130_t dev);
   cp2130_t ek;
 
+  //usbcom_set_debug_level(0x01);
+  usbcom_set_debug_level(0x11);
+
   printf("cp2130 main\n");
 
   if ((ek = cp2130_open(0x10c4, 0x87a0)) == NULL) {
