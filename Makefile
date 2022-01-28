@@ -22,7 +22,7 @@
 ###
 CFLAGS = -DLIBUSB01 -fPIC
 USBCOM = usbcom_libusb01.o
-LIBS=-Wl,-rpah-path /usr/local/lib -L/usr/local/lib -lusb
+LIBS=-Wl,-rpath /usr/local/lib -L/usr/local/lib -lusb
 ICONV=
 
 ###
