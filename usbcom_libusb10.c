@@ -17,7 +17,10 @@ struct usbcom {
 };
 
 static int debug = 0;
-void usbcom_set_debug_level(int x) {debug = x;}
+void usbcom_set_debug_level(int x)
+{
+  debug = (x&0x0f);
+}
 
 static int timeout = 1000;
 void usbcom_set_timeout(int x) {timeout = x;}
