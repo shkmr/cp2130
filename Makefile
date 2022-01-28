@@ -7,25 +7,34 @@
 #ICONV=-liconv
 
 ###
-###    libusb-0.1
+###    libusb-0.1 installed in system directory. 
+###
+#CFLAGS = -DLIBUSB01 -fPIC
+#USBCOM = usbcom_libusb01.o
+#LIBS=-lusb
+##ICONV=
+#ICONV=-liconv
+
+###
+###    libusb-0.1 installed from source code.
+###
+###    https://sourceforge.net/projects/libusb/files/libusb-0.1%20%28LEGACY%29/0.1.12/
+###    -- This can still be compied in RHEL8 (without -Werror option to gcc).
 ###
 CFLAGS = -DLIBUSB01 -fPIC
 USBCOM = usbcom_libusb01.o
-LIBS=-lusb
-#ICONV=
-ICONV=-liconv
-
+LIBS=-Wl,-rpah-path /usr/local/lib -L/usr/local/lib -lusb
+ICONV=
 
 ###
-###    libusb-1.0   -- some what does not work.  Need to fix.
+###    libusb-1.0   -- somewhat does not work.  Need to fix.
 ###
 #CFLAGS = -DLIBUSB10 -fPIC
 #USBCOM = usbcom_libusb10.o
 #LIBS=-lusb-1.0
 #ICONV=
 
-##
-#
+
 all : libcp2130.a libcp2130-config test_cp2130 test_cp2130ek 
 
 libcp2130-config : gen-libcp2130-config.sh
