@@ -98,6 +98,7 @@ void print_bar(int n)
 int main(int c, char *v[])
 {
   void print_dev_info(cp2130_t dev);
+  void usbcom_set_debug_level(int);
   cp2130_t ek;
 
   usbcom_set_debug_level(0x00);
