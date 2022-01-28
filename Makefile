@@ -12,8 +12,7 @@
 #CFLAGS = -DLIBUSB01 -fPIC
 #USBCOM = usbcom_libusb01.o
 #LIBS=-lusb
-##ICONV=
-#ICONV=-liconv
+#ICONV=
 
 ###
 ###    libusb-0.1 installed from source code.
@@ -27,7 +26,7 @@ LIBS=-Wl,-rpah-path /usr/local/lib -L/usr/local/lib -lusb
 ICONV=
 
 ###
-###    libusb-1.0   -- somewhat does not work.  Need to fix.
+###    libusb-1.0 installed in system directory.
 ###
 #CFLAGS = -DLIBUSB10 -fPIC
 #USBCOM = usbcom_libusb10.o
