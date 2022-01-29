@@ -67,7 +67,7 @@ static IOUSBDeviceInterface197 **find_device(SInt32 vendor,
   set_number_to_dictionary(dict, CFSTR(kUSBVendorID),  vendor);
   set_number_to_dictionary(dict, CFSTR(kUSBProductID), product);
 
-  service = IOServiceGetMatchingService(kIOMasterPortDefault, dict);
+  service = IOServiceGetMatchingService(kIOMainPortDefault, dict); /* was kIOMasterPortDefault */
 
   if (!service)
     return NULL;
